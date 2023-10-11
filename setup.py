@@ -9,6 +9,7 @@ with (SETUP_DIRECTORY / "README.md").open() as ifs:
 
 install_requires = (
     [
+        "daft>=0.1.2",
         "pymc>=5.9.0",
     ],
 )
