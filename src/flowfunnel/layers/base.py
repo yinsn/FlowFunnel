@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 import pymc as pm
@@ -27,7 +27,7 @@ class BaseLayer(ABC):
             self.init_dist = pm.Normal.dist(
                 np.mean(self.observed_data), np.std(self.observed_data)
             )
-        self.prob = None
+        self.output_states: Optional[List] = None
 
     @abstractmethod
     def add_to_model(

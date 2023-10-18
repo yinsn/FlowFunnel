@@ -39,7 +39,7 @@ class SequentialFunnel(BaseFunnel):
         with self.model:
             for layer in self.layers:
                 layer.add_to_model(self.model, prev_layer_output)
-                prev_layer_output = layer.prob
+                prev_layer_output = layer.output_states
 
     def generate_trace(
         self, samples: int = 1000, tune: int = 1000, chains: int = 4
