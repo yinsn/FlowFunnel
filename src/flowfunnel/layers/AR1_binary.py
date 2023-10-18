@@ -50,28 +50,26 @@ class AR1BinaryLayer(BaseLayer):
     def create_initial_state(
         self, prev_layer_output: Optional[np.ndarray], model: pm.Model
     ) -> pm.Bernoulli:
-        """Create the initial state of the AR1 model.
+        """Creates a subsequent state for the AR1 model based on the previous state.
 
         Args:
+            prev_state (pm.Bernoulli): The previous state in the model.
+            auto_regressive_coef (pm.Normal): The autoregressive coefficient.
+            noise_term (pm.Normal): The noise term for the AR1 model.
             prev_layer_output (Optional[np.ndarray]): The output states from the previous layer.
+            t (int): The current time index.
             model (pm.Model): The PyMC model to which this layer will be added.
 
         Returns:
-            pm.Bernoulli: The initial state.
+            pm.Bernoulli: A Bernoulli-distributed random variable representing the new state.
         """
+
+        if self.shape is None:
+            return
+
         with model:
-            prev_layer_coef = (
-                pm.Normal(f"{self.name}_prev_layer_coef", mu=0, sigma=1)
-                if prev_layer_output is not None
-                else 0
-            )
-            initial_out = (
-                (prev_layer_coef * prev_layer_output[0])
-                if prev_layer_output is not None
-                else self.initial_prob
-            )
             p_value = (
-                pm.math.sigmoid(initial_out)
+                pm.math.sigmoid(prev_layer_output[0])
                 if prev_layer_output is not None
                 else self.initial_prob
             )
@@ -87,24 +85,14 @@ class AR1BinaryLayer(BaseLayer):
         self,
         prev_state: pm.Bernoulli,
         auto_regressive_coef: pm.Normal,
+        noise_term: pm.Normal,
         prev_layer_output: Optional[np.ndarray],
         t: int,
         model: pm.Model,
     ) -> pm.Bernoulli:
-        """Create the subsequent states of the AR1 model.
-
-        Args:
-            prev_state (pm.Bernoulli): The previous state.
-            auto_regressive_coef (pm.Normal): The autoregressive coefficient.
-            prev_layer_output (Optional[np.ndarray]): The output states from the previous layer.
-            t (int): The current time step.
-            model (pm.Model): The PyMC model to which this layer will be added.
-
-        Returns:
-            pm.Bernoulli: The new state at time t.
-        """
+        """Create the subsequent states of the AR1 model."""
         with model:
-            output_t = auto_regressive_coef * prev_state
+            output_t = auto_regressive_coef * prev_state + noise_term
             if prev_layer_output is not None:
                 output_t += prev_layer_output[t]
             p = pm.math.sigmoid(output_t)
@@ -129,6 +117,7 @@ class AR1BinaryLayer(BaseLayer):
             auto_regressive_coef = pm.Normal(
                 f"{self.name}_auto_regressive_coef", mu=0, sigma=1
             )
+            noise_term = pm.Normal(f"{self.name}_noise", mu=0, sigma=1)
 
         if self.shape is None:
             return
@@ -140,6 +129,7 @@ class AR1BinaryLayer(BaseLayer):
             new_state = self.create_subsequent_state(
                 self.output_states[-1],
                 auto_regressive_coef,
+                noise_term,
                 prev_layer_output,
                 t,
                 model,
