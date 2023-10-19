@@ -69,7 +69,7 @@ class ARnBinaryLayer(BaseLayer):
 
         Args:
             prev_layer_output (Optional[np.ndarray]): Output from the previous layer.
-            model (pm.Model): PyMC3 model.
+            model (pm.Model): PyMC model.
 
         Returns:
             pm.Bernoulli: Initial state.
@@ -106,7 +106,7 @@ class ARnBinaryLayer(BaseLayer):
             prev_layer_influence (pm.Normal): Influence from previous layer's states.
             prev_layer_output (Optional[np.ndarray]): Output from the previous layer.
             t (int): Current time step.
-            model (pm.Model): PyMC3 model.
+            model (pm.Model): PyMC model.
 
         Returns:
             pm.Bernoulli: State at time \( t \).
@@ -134,10 +134,10 @@ class ARnBinaryLayer(BaseLayer):
         self, model: pm.Model, prev_layer_output: Optional[np.ndarray] = None
     ) -> None:
         """
-        Add this layer to a PyMC3 model.
+        Add this layer to a PyMC model.
 
         Args:
-            model (pm.Model): PyMC3 model.
+            model (pm.Model): PyMC model.
             prev_layer_output (Optional[np.ndarray]): Output from the previous layer.
         """
         with model:
