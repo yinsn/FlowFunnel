@@ -20,6 +20,17 @@ class AR1IntLayer(BaseLayer):
         shape: Optional[Tuple[int, int]] = None,
         is_first_layer: bool = False,
     ) -> None:
+        """Initializes the AR1IntLayer.
+
+        Args:
+            name (str): Name of the layer.
+            observed_data (Optional[np.ndarray]): Observed data for the layer, defaults to None.
+            shape (Optional[Tuple[int, int]]): Shape of the data, defaults to None.
+            is_first_layer (bool): Flag to indicate if it's the first layer, defaults to False.
+
+        Raises:
+            ValueError: If both observed_data and shape are None.
+        """
         super().__init__(name, observed_data, shape)
         self.is_first_layer = is_first_layer
         self.output_states: List[pm.Poisson] = []
@@ -38,6 +49,18 @@ class AR1IntLayer(BaseLayer):
     def create_initial_state(
         self, prev_layer_output: Optional[np.ndarray], model: pm.Model
     ) -> pm.Poisson:
+        """Creates the initial state for the layer.
+
+        Args:
+            prev_layer_output (Optional[np.ndarray]): Output of the previous layer, defaults to None.
+            model (pm.Model): PyMC model object.
+
+        Returns:
+            pm.Poisson: Initial state.
+
+        Raises:
+            ValueError: If shape is None.
+        """
         if self.shape is None:
             return
         with model:
@@ -64,6 +87,20 @@ class AR1IntLayer(BaseLayer):
         t: int,
         model: pm.Model,
     ) -> pm.Poisson:
+        """Creates a subsequent state for the layer based on the previous state.
+
+        Args:
+            prev_state (pm.Poisson): Previous state.
+            growth_trend (pm.Normal): Growth trend parameter.
+            uncertainty (pm.Normal): Uncertainty parameter.
+            layer_transition_rate (pm.Normal): Layer transition rate parameter.
+            prev_layer_output (Optional[np.ndarray]): Output of the previous layer, defaults to None.
+            t (int): Time step index.
+            model (pm.Model): PyMC model object.
+
+        Returns:
+            pm.Poisson: New state at time t.
+        """
         with model:
             output_t = growth_trend * prev_state + uncertainty
             if not self.is_first_layer and prev_layer_output is not None:
@@ -80,6 +117,15 @@ class AR1IntLayer(BaseLayer):
     def add_to_model(
         self, model: pm.Model, prev_layer_output: Optional[np.ndarray] = None
     ) -> None:
+        """Adds the layer to a given PyMC model.
+
+        Args:
+            model (pm.Model): PyMC model object.
+            prev_layer_output (Optional[np.ndarray]): Output of the previous layer, defaults to None.
+
+        Raises:
+            ValueError: If shape is None.
+        """
         with model:
             growth_trend = pm.Normal(f"{self.name}_growth_trend", mu=0, sigma=1)
             uncertainty = pm.Normal(f"{self.name}_uncertainty", mu=0, sigma=1)
