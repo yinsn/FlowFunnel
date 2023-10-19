@@ -31,7 +31,6 @@ class AR1BinaryLayer(BaseLayer):
         super().__init__(name, observed_data, shape)
         self.is_first_layer = is_first_layer
         self.output_states: List[pm.Bernoulli] = []
-        # Initialize shape and initial_prob
         if self.observed_data is not None:
             self.shape = self.observed_data.shape
         elif shape is not None:
