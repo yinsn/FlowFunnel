@@ -7,14 +7,10 @@ from .base import BaseLayer
 
 
 class AR1BinaryLayer(BaseLayer):
-    """A layer that models binary time series data using an AR(1) process.
-
-    This layer models the binary time series data using an autoregressive
-    model of order 1 (AR(1)). It can also incorporate the output from
-    the previous layer as an input to its state transition.
+    """Implements an AR(1) binary layer for a hierarchical model.
 
     Attributes:
-        output_states (List[pm.Bernoulli]): A list storing the output states of the layer.
+        output_states (List[pm.Bernoulli]): A list to store output states of each time step.
     """
 
     def __init__(
@@ -22,27 +18,26 @@ class AR1BinaryLayer(BaseLayer):
         name: str,
         observed_data: Optional[np.ndarray] = None,
         shape: Optional[Tuple[int, int]] = None,
+        is_first_layer: bool = False,
     ) -> None:
         """Initializes the AR1BinaryLayer.
 
         Args:
-            name (str): The name of this layer.
-            observed_data (Optional[np.ndarray]): The observed data for this layer.
-            shape (Optional[Tuple[int, int]]): The shape of the data tensor if observed_data is not provided.
-
-        Raises:
-            ValueError: If neither observed_data nor shape is provided.
+            name (str): Name of the layer.
+            observed_data (Optional[np.ndarray]): Observed data for the layer, defaults to None.
+            shape (Optional[Tuple[int, int]]): Shape of the data, defaults to None.
+            is_first_layer (bool): Flag to indicate if it's the first layer, defaults to False.
         """
         super().__init__(name, observed_data, shape)
+        self.is_first_layer = is_first_layer
         self.output_states: List[pm.Bernoulli] = []
-
+        # Initialize shape and initial_prob
         if self.observed_data is not None:
             self.shape = self.observed_data.shape
         elif shape is not None:
             self.shape = shape
         else:
             raise ValueError("Either observed_data or shape must be provided.")
-
         self.initial_prob = (
             np.mean(self.observed_data) if self.observed_data is not None else 0.5
         )
@@ -50,23 +45,17 @@ class AR1BinaryLayer(BaseLayer):
     def create_initial_state(
         self, prev_layer_output: Optional[np.ndarray], model: pm.Model
     ) -> pm.Bernoulli:
-        """Creates a subsequent state for the AR1 model based on the previous state.
+        """Creates the initial state for the layer.
 
         Args:
-            prev_state (pm.Bernoulli): The previous state in the model.
-            auto_regressive_coef (pm.Normal): The autoregressive coefficient.
-            noise_term (pm.Normal): The noise term for the AR1 model.
-            prev_layer_output (Optional[np.ndarray]): The output states from the previous layer.
-            t (int): The current time index.
-            model (pm.Model): The PyMC model to which this layer will be added.
+            prev_layer_output (Optional[np.ndarray]): Output of the previous layer, defaults to None.
+            model (pm.Model): PyMC model object.
 
         Returns:
-            pm.Bernoulli: A Bernoulli-distributed random variable representing the new state.
+            pm.Bernoulli: Initial state.
         """
-
         if self.shape is None:
             return
-
         with model:
             p_value = (
                 pm.math.sigmoid(prev_layer_output[0])
@@ -84,17 +73,31 @@ class AR1BinaryLayer(BaseLayer):
     def create_subsequent_state(
         self,
         prev_state: pm.Bernoulli,
-        auto_regressive_coef: pm.Normal,
-        noise_term: pm.Normal,
+        growth_trend: pm.Normal,
+        uncertainty: pm.Normal,
+        layer_transition_rate: pm.Normal,
         prev_layer_output: Optional[np.ndarray],
         t: int,
         model: pm.Model,
     ) -> pm.Bernoulli:
-        """Create the subsequent states of the AR1 model."""
+        """Creates a subsequent state for the layer based on the previous state.
+
+        Args:
+            prev_state (pm.Bernoulli): Previous state.
+            growth_trend (pm.Normal): Growth trend parameter.
+            uncertainty (pm.Normal): Uncertainty parameter.
+            layer_transition_rate (pm.Normal): Layer transition rate parameter.
+            prev_layer_output (Optional[np.ndarray]): Output of the previous layer, defaults to None.
+            t (int): Time step index.
+            model (pm.Model): PyMC model object.
+
+        Returns:
+            pm.Bernoulli: New state at time t.
+        """
         with model:
-            output_t = auto_regressive_coef * prev_state + noise_term
-            if prev_layer_output is not None:
-                output_t += prev_layer_output[t]
+            output_t = growth_trend * prev_state + uncertainty
+            if not self.is_first_layer and prev_layer_output is not None:
+                output_t += layer_transition_rate * prev_layer_output[t]
             p = pm.math.sigmoid(output_t)
             return pm.Bernoulli(
                 f"{self.name}_state_{t}",
@@ -107,17 +110,21 @@ class AR1BinaryLayer(BaseLayer):
     def add_to_model(
         self, model: pm.Model, prev_layer_output: Optional[np.ndarray] = None
     ) -> None:
-        """Adds this layer to a PyMC model.
+        """Adds the layer to a given PyMC model.
 
         Args:
-            model (pm.Model): The PyMC model to which this layer will be added.
-            prev_layer_output (Optional[np.ndarray]): The output states from the previous layer.
+            model (pm.Model): PyMC model object.
+            prev_layer_output (Optional[np.ndarray]): Output of the previous layer, defaults to None.
         """
         with model:
-            auto_regressive_coef = pm.Normal(
-                f"{self.name}_auto_regressive_coef", mu=0, sigma=1
-            )
-            noise_term = pm.Normal(f"{self.name}_noise", mu=0, sigma=1)
+            growth_trend = pm.Normal(f"{self.name}_growth_trend", mu=0, sigma=1)
+            uncertainty = pm.Normal(f"{self.name}_uncertainty", mu=0, sigma=1)
+            if not self.is_first_layer:
+                layer_transition_rate = pm.Normal(
+                    f"{self.name}_layer_transition_rate", mu=0, sigma=1
+                )
+            else:
+                layer_transition_rate = None
 
         if self.shape is None:
             return
@@ -128,8 +135,9 @@ class AR1BinaryLayer(BaseLayer):
         for t in range(1, self.shape[0]):
             new_state = self.create_subsequent_state(
                 self.output_states[-1],
-                auto_regressive_coef,
-                noise_term,
+                growth_trend,
+                uncertainty,
+                layer_transition_rate,
                 prev_layer_output,
                 t,
                 model,
