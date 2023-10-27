@@ -1,5 +1,6 @@
 from .AR1_binary import AR1BinaryLayer
 from .AR1_int import AR1IntLayer
+from .AR1_int_tfp import AR1IntTFPLayer
 from .ARn_binary import ARnBinaryLayer
 from .ARn_int import ARnIntLayer
 from .base import BaseLayer
@@ -16,4 +17,5 @@ __all__ = [
     "DecisionLayer",
     "GRWToBernoulliLayer",
     "GRWToPoissonLayer",
+    "AR1IntTFPLayer",
 ]
