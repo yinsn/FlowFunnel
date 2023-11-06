@@ -3,6 +3,9 @@ from typing import List, Optional
 
 import numpy as np
 import pymc as pm
+import pytensor as pt
+
+pt.config.optimizer = "fast_compile"
 
 
 class BaseLayer(ABC):
@@ -21,12 +24,21 @@ class BaseLayer(ABC):
             shape (tuple, optional): Shape of the data tensor. Defaults to None.
         """
         self.name = name
-        self.observed_data = observed_data
         self.shape = shape
-        if self.observed_data is not None:
-            self.init_dist = pm.Normal.dist(
-                np.mean(self.observed_data), np.std(self.observed_data)
-            )
+
+        if observed_data is not None:
+            observed_mean = np.mean(observed_data, axis=0)
+            observed_std = np.std(observed_data, axis=0)
+            if observed_std.any():
+                self.observed_data = (observed_data - observed_mean) / observed_std
+                self.init_dist = pm.Normal.dist(mu=0, sigma=1)
+            else:
+                self.observed_data = observed_data
+                self.init_dist = pm.Normal.dist(mu=observed_mean, sigma=1)
+        else:
+            self.observed_data = None
+            self.init_dist = None
+
         self.output_states: Optional[List] = None
 
     @abstractmethod
