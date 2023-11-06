@@ -7,7 +7,7 @@ from .base import BaseLayer
 
 
 class ARnFloatLayer(BaseLayer):
-    """Implements an AR(1) layer for a hierarchical model, adapted for averaged real-valued data.
+    """Implements an ARn layer for a hierarchical model, adapted for averaged real-valued data.
 
     Attributes:
         name (str): A unique identifier for the layer.
