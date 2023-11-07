@@ -10,7 +10,7 @@ with (SETUP_DIRECTORY / "README.md").open() as ifs:
 install_requires = (
     [
         "daft>=0.1.2",
-        "pymc>=5.9.0",
+        "pymc>=5.6.1",
         "pytensor>=2.7.3",
     ],
 )
@@ -25,7 +25,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
     url="https://github.com/yinsn/FlowFunnel",
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     description="Leveraging Bayesian hierarchical models to diagnose issues and proactively predict user flow stages in conversion funnels.",
     packages=find_packages("src"),
     package_dir={"": "src"},
