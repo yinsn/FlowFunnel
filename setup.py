@@ -11,10 +11,11 @@ install_requires = (
     [
         "daft>=0.1.2",
         "pymc>=5.9.0",
+        "pytensor>=2.7.3",
     ],
 )
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 setup(
     name="flowfunnel",
