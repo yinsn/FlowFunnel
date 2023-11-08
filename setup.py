@@ -12,6 +12,7 @@ install_requires = (
         "daft>=0.1.2",
         "pymc>=5.6.1",
         "pytensor>=2.12.3",
+        "tdqm>=4.66.1",
     ],
 )
 
