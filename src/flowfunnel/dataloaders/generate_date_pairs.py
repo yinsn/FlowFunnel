@@ -8,7 +8,9 @@ def generate_week_pairs(
     """
     Generate a list of date pairs between start_date and end_date as week-like windows.
 
-    Week-like windows are defined by window_size, which denotes the number of days for each date range. The next window starts after the interval days from the start of the previous window. The last window may be shorter if it reaches the end_date.
+    Week-like windows are defined by window_size, which denotes the number of days for each date range.
+    The next window starts after the interval days from the start of the previous window.
+    The last window may be shorter if it reaches the end_date.
 
     Args:
         start_date: The starting date in 'YYYYMMDD' format.
