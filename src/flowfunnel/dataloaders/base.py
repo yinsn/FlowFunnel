@@ -27,7 +27,7 @@ class BaseDataLoader(ABC):
         """Load data from file."""
         raise NotImplementedError("load_data() not implemented")
 
-    def column_name_spliting(self, delimiter: str = ".") -> None:
+    def column_name_splitting(self, delimiter: str = ".") -> None:
         """Split column names by delimiter."""
         columns = []
         if self.df is not None:

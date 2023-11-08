@@ -11,7 +11,7 @@ class CSVLoader(BaseDataLoader):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
-        self.column_name_spliting()
+        self.column_name_splitting()
 
     def load_data(self) -> pd.DataFrame:
         """Load data from CSV file."""
