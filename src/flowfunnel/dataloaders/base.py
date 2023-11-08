@@ -163,11 +163,12 @@ class BaseDataLoader(ABC):
 
         observed_data_average = (
             [
-                np.mean(self.pre_aggregated_data[column][start_index : end_index + 1])
+                np.stack(self.pre_aggregated_data[column]).mean(axis=0)[
+                    start_index : end_index + 1
+                ]
                 for column in selected_columns
             ]
             if self.pre_aggregated_data is not None
             else []
         )
-
         return observed_data_average
