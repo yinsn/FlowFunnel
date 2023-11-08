@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import List, Optional
 
 import numpy as np
@@ -78,6 +79,50 @@ class BaseDataLoader(ABC):
         result_df = result_df[[id_column] + selected_columns]
         return result_df
 
+    @staticmethod
+    def calculate_date_difference(start_date_str: str, end_date_str: str) -> int:
+        """
+        Calculate the difference in days between two dates given as strings.
+
+        Args:
+            start_date_str (str): The start date in 'YYYYMMDD' format.
+            end_date_str (str): The end date in 'YYYYMMDD' format.
+
+        Returns:
+            int: The number of days between the start and end date.
+        """
+        start_date = datetime.strptime(start_date_str, "%Y%m%d")
+        end_date = datetime.strptime(end_date_str, "%Y%m%d")
+        difference = (end_date - start_date).days
+        return difference
+
+    def pre_aggregate_dates(
+        self,
+        selected_columns: List[str],
+        id_column: str,
+        date_column: str,
+        starts_from: str,
+        ends_at: str,
+    ) -> None:
+        """
+        Pre-aggregates the data within the specified date range for each unique identifier in the dataframe.
+
+        Args:
+            selected_columns (List[str]): A list of column names to include in the aggregation.
+            id_column (str): The name of the column that contains unique identifiers.
+            date_column (str): The name of the column that contains the date information.
+            starts_from (str): The start date for the date range to be aggregated in 'YYYYMMDD' format.
+            ends_at (str): The end date for the date range to be aggregated in 'YYYYMMDD' format.
+
+        """
+        self.pre_aggregated_data = self._aggregate_dates(
+            selected_columns, id_column, date_column, starts_from, ends_at
+        )
+        self.pre_aggregate_starts_from = starts_from
+        self.pre_aggregate_length = (
+            self.calculate_date_difference(starts_from, ends_at) + 1
+        )
+
     def get_observed_data_average(
         self,
         selected_columns: List[str],
@@ -87,21 +132,42 @@ class BaseDataLoader(ABC):
         ends_at: str,
     ) -> List:
         """
-        Calculate the average of observed data for the selected columns within a given date range.
+        Calculate the average of observed data in the specified date range.
 
-        This method uses an internal method `_aggregate_dates` which should aggregate
-        data across the specified date range. After aggregation, it computes the mean
-        for each of the selected columns and returns a list of these averages.
+        Args:
+            selected_columns: A list of column names to include in the average calculation.
+            id_column: The name of the column that contains unique identifiers.
+            date_column: The name of the column that contains the date information.
+            starts_from: The start date for the date range in 'YYYYMMDD' format.
+            ends_at: The end date for the date range in 'YYYYMMDD' format.
 
         Returns:
-            A list of floats representing the average value for each column in the
-            selected columns list over the given date range.
-
+            A list of floats representing the average values for the selected columns.
         """
-        result_df = self._aggregate_dates(
-            selected_columns, id_column, date_column, starts_from, ends_at
+        if self.pre_aggregated_data is None:
+            self.pre_aggregate_dates(
+                selected_columns, id_column, date_column, starts_from, ends_at
+            )
+
+        start_index = self.calculate_date_difference(
+            self.pre_aggregate_starts_from, starts_from
         )
-        observed_data_average = [
-            np.stack(result_df[column]).mean(axis=0) for column in selected_columns
-        ]
+        end_index = self.calculate_date_difference(
+            self.pre_aggregate_starts_from, ends_at
+        )
+
+        if end_index >= self.pre_aggregate_length:
+            raise IndexError(
+                "The end date exceeds the range of the pre-aggregated data."
+            )
+
+        observed_data_average = (
+            [
+                np.mean(self.pre_aggregated_data[column][start_index : end_index + 1])
+                for column in selected_columns
+            ]
+            if self.pre_aggregated_data is not None
+            else []
+        )
+
         return observed_data_average
