@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 import pymc as pm
 
@@ -36,7 +36,11 @@ class BaseFunnel(ABC):
 
     @abstractmethod
     def generate_trace(
-        self, samples: int = 1000, tune: int = 1000, chains: int = 4
+        self,
+        samples: int = 1000,
+        tune: int = 1000,
+        cores: Optional[int] = None,
+        chains: Optional[int] = None,
     ) -> pm.backends.base.MultiTrace:
         """Generates the trace by sampling the PyMC model.
 
@@ -44,6 +48,7 @@ class BaseFunnel(ABC):
             samples (int): Number of samples to draw.
             tune (int): Number of iterations to tune.
             chains (int): Number of chains to run.
+            cores (int): Number of cores to run the sampling on.
 
         Returns:
             pm.backends.base.MultiTrace: The generated trace.

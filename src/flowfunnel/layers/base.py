@@ -3,9 +3,6 @@ from typing import List, Optional
 
 import numpy as np
 import pymc as pm
-import pytensor as pt
-
-pt.config.optimizer = "fast_compile"
 
 
 class BaseLayer(ABC):
