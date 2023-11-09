@@ -2,8 +2,11 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 import pymc as pm
+import pytensor as pt
 
 from ..layers import BaseLayer
+
+pt.config.optimizer = "fast_compile"
 
 
 class BaseFunnel(ABC):
