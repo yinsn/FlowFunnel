@@ -75,13 +75,15 @@ class ARnFloatLayer(BaseLayer):
                 if prev_layer_output is not None
                 else self.initial_mean
             )
+            mutable_observed_initial = pm.MutableData(
+                name=f"{self.name}_observed_initial",
+                value=self.observed_data[0] if self.observed_data is not None else None,
+            )
             return pm.Normal(
                 f"{self.name}_state_0",
                 mu=lambda_value,
                 sigma=self.observed_std,
-                observed=(
-                    self.observed_data[0] if self.observed_data is not None else None
-                ),
+                observed=mutable_observed_initial,
             )
 
     def create_subsequent_state(
@@ -110,15 +112,18 @@ class ARnFloatLayer(BaseLayer):
             sum_prev_states = pm.math.sum(prev_states)
             avg_prev_states = sum_prev_states / (t + 1)
             output_t = self_influence * avg_prev_states
+            mutable_observed_subsequent = pm.MutableData(
+                name=f"{self.name}_observed_subsequent_{t}",
+                value=self.observed_data[t] if self.observed_data is not None else None,
+            )
             if prev_layer_influence and prev_layer_output is not None:
                 output_t += prev_layer_influence * prev_layer_output[t]
+
             return pm.Normal(
                 f"{self.name}_state_{t}",
                 mu=output_t,
                 sigma=self.observed_std,
-                observed=(
-                    self.observed_data[t] if self.observed_data is not None else None
-                ),
+                observed=mutable_observed_subsequent,
             )
 
     def add_to_model(
