@@ -28,13 +28,19 @@ class GraphFunnel(BaseFunnel):
         """
         self.layers[layer.name] = layer
 
-    def add_flow(self, from_layer_name: str, to_layer_name: str) -> None:
+    def add_flow(self, from_layer: BaseLayer, to_layer: BaseLayer) -> None:
         """Create a flow between two layers in the funnel.
 
         Args:
-            from_layer_name (str): The name of the source layer.
-            to_layer_name (str): The name of the destination layer.
+            from_layer (BaseLayer): The source layer.
+            to_layer (BaseLayer): The destination layer.
         """
+        from_layer_name = from_layer.name
+        to_layer_name = to_layer.name
+        if from_layer_name not in self.layers:
+            self.add_layer(from_layer)
+        if to_layer_name not in self.layers:
+            self.add_layer(to_layer)
         self.flows.append((from_layer_name, to_layer_name))
 
     def construct_model(self) -> None:
