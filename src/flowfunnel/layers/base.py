@@ -11,6 +11,7 @@ class BaseLayer(ABC):
         name: str,
         observed_data: Optional[np.ndarray] = None,
         shape: Optional[tuple] = None,
+        is_first_layer: bool = False,
     ) -> None:
         """
         Initializes the BaseLayer class.
@@ -19,9 +20,11 @@ class BaseLayer(ABC):
             name (str): Name for this layer.
             observed_data (np.ndarray, optional): Observed data to be used in the model. Defaults to None.
             shape (tuple, optional): Shape of the data tensor. Defaults to None.
+            is_first_layer (bool): Indicator of whether this layer is the first in the hierarchical model. Defaults to False.
         """
         self.name = name
         self.shape = shape
+        self.is_first_layer = is_first_layer
 
         if observed_data is not None:
             observed_mean = np.mean(observed_data, axis=0)

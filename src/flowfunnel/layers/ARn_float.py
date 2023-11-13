@@ -32,12 +32,11 @@ class ARnFloatLayer(BaseLayer):
             name (str): A unique identifier for the layer.
             observed_data (Optional[np.ndarray]): Real-world data to which the model is to be fitted, defaults to None.
             shape (Optional[Tuple[int, int]]): The shape of the input data if observed data isn't provided, defaults to None.
-            is_first_layer (bool): Indicator of whether this layer is the first in the hierarchical model.
 
         Raises:
             ValueError: If neither observed_data nor shape are provided.
         """
-        super().__init__(name, observed_data, shape)
+        super().__init__(name, observed_data, shape, is_first_layer)
         self.is_first_layer = is_first_layer
         self.observed_std = (
             np.std(self.observed_data, ddof=1)
