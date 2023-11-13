@@ -28,7 +28,7 @@ class SequentialFunnel(BaseFunnel):
         Returns:
             None
         """
-        self.layers.append(layer)
+        self.layers[layer.name] = layer
 
     def construct_model(self) -> None:
         """
@@ -39,7 +39,7 @@ class SequentialFunnel(BaseFunnel):
         """
         prev_layer_output = None
         with self.model:
-            for layer in self.layers:
+            for layer in self.layers.values():
                 layer.add_to_model(self.model, prev_layer_output)
                 prev_layer_output = layer.output_states
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Dict, Optional
 
 import pymc as pm
 import pytensor as pt
@@ -19,7 +19,7 @@ class BaseFunnel(ABC):
     """
 
     def __init__(self) -> None:
-        self.layers: List[BaseLayer] = []
+        self.layers: Dict = {}
         self.model = pm.Model()
         self.trace = None
 
