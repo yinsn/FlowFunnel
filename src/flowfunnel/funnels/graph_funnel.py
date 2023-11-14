@@ -20,14 +20,6 @@ class GraphFunnel(BaseFunnel):
         self.flows: List[Tuple[str, str]] = []
         self.model: pm.Model = pm.Model()
 
-    def add_layer(self, layer: BaseLayer) -> None:
-        """Add a layer to the funnel.
-
-        Args:
-            layer (BaseLayer): The layer to be added to the funnel.
-        """
-        self.layers[layer.name] = layer
-
     def add_flow(self, from_layer: BaseLayer, to_layer: BaseLayer) -> None:
         """Create a flow between two layers in the funnel.
 

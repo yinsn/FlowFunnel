@@ -2,7 +2,6 @@ from typing import Optional
 
 import pymc as pm
 
-from ..layers import BaseLayer
 from .base import BaseFunnel
 
 
@@ -17,18 +16,6 @@ class SequentialFunnel(BaseFunnel):
         model (pm.Model): The underlying PyMC model.
         trace (Optional[pm.backends.base.MultiTrace]): The trace generated after sampling.
     """
-
-    def add_layer(self, layer: BaseLayer) -> None:
-        """
-        Adds a layer to the funnel in a sequential manner.
-
-        Args:
-            layer (BaseLayer): The layer to be added.
-
-        Returns:
-            None
-        """
-        self.layers[layer.name] = layer
 
     def construct_model(self) -> None:
         """

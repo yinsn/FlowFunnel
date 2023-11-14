@@ -23,14 +23,17 @@ class BaseFunnel(ABC):
         self.model = pm.Model()
         self.trace = None
 
-    @abstractmethod
     def add_layer(self, layer: BaseLayer) -> None:
-        """Adds a layer to the funnel.
+        """
+        Adds a layer to the funnel in a sequential manner.
 
         Args:
             layer (BaseLayer): The layer to be added.
+
+        Returns:
+            None
         """
-        pass
+        self.layers[layer.name] = layer
 
     @abstractmethod
     def construct_model(self) -> None:
