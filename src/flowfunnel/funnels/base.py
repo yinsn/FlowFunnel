@@ -122,7 +122,46 @@ class BaseFunnel(ABC):
             pm.set_data(
                 new_data=constant_data_dict,
             )
-            self.new_trace = pm.sample(
-                samples, tune=tune, cores=cores, chains=chains, init="adapt_diag"
+            try:
+                self.new_trace = pm.sample(
+                    samples, tune=tune, cores=cores, chains=chains, init="advi"
+                )
+                self.new_summary = pm.summary(self.new_trace).round(3)
+            except:
+                self.new_trace = None
+                self.new_summary = None
+
+    def rolling_update_data_block(
+        self,
+        data_block: List[np.ndarray],
+        window_size: int,
+        samples: int = 500,
+        tune: int = 100,
+        cores: Optional[int] = None,
+        chains: Optional[int] = None,
+    ) -> np.ndarray:
+        """
+        Updates the data block in a rolling window fashion and collects model summary statistics.
+
+        This method iterates over the data block using a window of specified size, updating the
+        model with each new window and collecting the mean values from the model summary after each update.
+
+        Args:
+            data_block (List[np.ndarray]): A list of numpy arrays representing the data block.
+            window_size (int): The size of the rolling window.
+            samples (int, optional): Number of samples to draw in each update. Defaults to 500.
+            tune (int, optional): Number of iterations to tune in each update. Defaults to 100.
+            cores (Optional[int], optional): Number of cores to run the sampling on. Defaults to None.
+            chains (Optional[int], optional): Number of chains to run in each update. Defaults to None.
+
+        Returns:
+            np.ndarray: An array containing the collected mean values from the model summary.
+        """
+        ans = []
+        for i in range(0, len(data_block[0]) - window_size + 1, window_size // 2):
+            block = np.stack(data_block)[:, i : i + window_size]
+            self.update_data_block(
+                block, samples=samples, tune=tune, cores=cores, chains=chains
             )
-            self.new_summary = pm.summary(self.new_trace).round(3)
+            ans.append(self.new_summary["mean"].to_list())
+        return np.stack(ans).transpose()
