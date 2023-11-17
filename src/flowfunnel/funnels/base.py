@@ -98,10 +98,7 @@ class BaseFunnel(ABC):
     def update_data_block(
         self,
         data_block: List[np.ndarray],
-        samples: int = 500,
-        tune: int = 100,
-        cores: Optional[int] = None,
-        chains: Optional[int] = None,
+        draws: int = 500,
     ) -> None:
         """
         Updates the model's data block and generates a new trace.
@@ -112,33 +109,23 @@ class BaseFunnel(ABC):
 
         Args:
             data_block (List[np.ndarray]): A list of numpy arrays representing the data block.
-            samples (int, optional): Number of samples to draw. Defaults to 500.
-            tune (int, optional): Number of iterations to tune. Defaults to 100.
-            cores (Optional[int], optional): Number of cores to run the sampling on. Defaults to None.
-            chains (Optional[int], optional): Number of chains to run. Defaults to None.
+            draws (int, optional): Number of draws in each update. Defaults to 500.
         """
         constant_data_dict = self.get_constant_data_dict(data_block)
         with self.model:
             pm.set_data(
                 new_data=constant_data_dict,
             )
-            try:
-                self.new_trace = pm.sample(
-                    samples, tune=tune, cores=cores, chains=chains, init="advi"
-                )
-                self.new_summary = pm.summary(self.new_trace).round(3)
-            except:
-                self.new_trace = None
-                self.new_summary = None
+            approx = pm.fit()
+            self.new_trace = approx.sample(draws=draws)
+            self.new_summary = pm.summary(self.new_trace).round(3)
 
     def rolling_update_data_block(
         self,
         data_block: List[np.ndarray],
         window_size: int,
-        samples: int = 500,
-        tune: int = 100,
-        cores: Optional[int] = None,
-        chains: Optional[int] = None,
+        draws: int = 500,
+        step: Optional[int] = None,
     ) -> np.ndarray:
         """
         Updates the data block in a rolling window fashion and collects model summary statistics.
@@ -149,19 +136,20 @@ class BaseFunnel(ABC):
         Args:
             data_block (List[np.ndarray]): A list of numpy arrays representing the data block.
             window_size (int): The size of the rolling window.
-            samples (int, optional): Number of samples to draw in each update. Defaults to 500.
-            tune (int, optional): Number of iterations to tune in each update. Defaults to 100.
-            cores (Optional[int], optional): Number of cores to run the sampling on. Defaults to None.
-            chains (Optional[int], optional): Number of chains to run in each update. Defaults to None.
+            draws (int, optional): Number of draws in each update. Defaults to 500.
+            step (Optional[int], optional): The step size between each window. If None, defaults to half the window size.
 
         Returns:
             np.ndarray: An array containing the collected mean values from the model summary.
         """
         ans = []
-        for i in range(0, len(data_block[0]) - window_size + 1, window_size // 2):
+        if step is None:
+            step = window_size // 2
+        for i in range(0, len(data_block[0]) - window_size + 1, step):
             block = np.stack(data_block)[:, i : i + window_size]
             self.update_data_block(
-                block, samples=samples, tune=tune, cores=cores, chains=chains
+                data_block=block,
+                draws=draws,
             )
             ans.append(self.new_summary["mean"].to_list())
         return np.stack(ans).transpose()
