@@ -4,6 +4,7 @@ import jax
 import numpy as np
 import numpyro
 import numpyro.distributions as dist
+from joblib import Parallel, delayed
 from numpyro.infer import MCMC, NUTS
 
 from ..dataloaders import standardize_list
@@ -114,7 +115,7 @@ class PyroFunnel:
         num_samples: int = 500,
         num_warmup: int = 100,
         num_chains: int = 1,
-    ) -> None:
+    ) -> Dict[str, np.ndarray]:
         """
         Updates the model's data block and generates a new trace.
 
@@ -127,11 +128,15 @@ class PyroFunnel:
             num_samples (int, optional): Number of samples to draw. Defaults to 500.
             num_warmup (int, optional): Number of warmup steps. Defaults to 100.
             num_chains (int, optional): Number of chains to run. Defaults to 1.
+
+        Returns:
+            Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of model summary statistics.
         """
         constant_data_dict = self.get_constant_data_dict(data_block)
         for k, v in constant_data_dict.items():
             self.update_layer_data(k, v)
         self.run(num_samples, num_warmup, num_chains)
+        return self.means
 
     def run(
         self, num_samples: int = 500, num_warmup: int = 100, num_chains: int = 1
@@ -151,9 +156,7 @@ class PyroFunnel:
             num_chains=num_chains,
         )
         self.mcmc.run(jax.random.PRNGKey(0))
-        self.means = np.asarray(
-            [np.mean(v) for k, v in self.mcmc.get_samples().items()]
-        )
+        self.means = {k: np.mean(v) for k, v in self.mcmc.get_samples().items()}
 
     def rolling_update_data_block(
         self,
@@ -179,23 +182,31 @@ class PyroFunnel:
             step (Optional[int], optional): The step size between each window. If None, defaults to half the window size.
 
         Returns:
-            Dict[str, np.ndarray]: A dictionary mapping layer names to arrays of mean values.
+            Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of model summary statistics.
         """
-        ans = []
-        rolling_results = {}
+        windowed_blocks = []
+        stacked_data_sequences = np.stack(data_block)
         if step is None:
             step = window_size // 2
-        for i in range(0, len(data_block[0]) - window_size + 1, step):
-            block = np.stack(data_block)[:, i : i + window_size]
-            self.update_data_block(
-                data_block=block,
+        for start_index in range(0, len(data_block[0]) - window_size + 1, step):
+            current_window = stacked_data_sequences[
+                :, start_index : start_index + window_size
+            ]
+            windowed_blocks.append(current_window)
+        model_updates = Parallel(n_jobs=-1)(
+            delayed(self.update_data_block)(
+                data_block=current_window,
                 num_samples=num_samples,
                 num_warmup=num_warmup,
                 num_chains=num_chains,
             )
-            ans.append(self.means)
-        stack = np.stack(ans).transpose()
-        if self.mcmc is not None:
-            for index, para_name in enumerate(self.mcmc.get_samples().keys()):
-                rolling_results[para_name] = stack[index]
-        return rolling_results
+            for current_window in windowed_blocks
+        )
+        summary_statistics: Dict = {key: [] for key in model_updates[0].keys()}
+        for d in model_updates:
+            for key in summary_statistics.keys():
+                summary_statistics[key].append(d[key])
+
+        for key in summary_statistics.keys():
+            summary_statistics[key] = np.array(summary_statistics[key])
+        return summary_statistics
