@@ -72,6 +72,15 @@ class PyroFunnel:
                 layer.update_state(t)
             self.sample_observations(t)
 
+    def update_layer_data(self, layer_name: str, data: List[float]) -> None:
+        """Updates the data for a layer.
+
+        Args:
+            layer_name (str): The name of the layer to update.
+            data (List[float]): The new data for the layer.
+        """
+        self.data_dict[layer_name] = data
+
     def run(
         self, num_samples: int = 1000, num_warmup: int = 500, num_chains: int = 1
     ) -> None:
