@@ -92,8 +92,8 @@ class PyroFunnel:
         """Runs the MCMC simulation.
 
         Args:
-            num_samples (int, optional): Number of samples to draw. Defaults to 1000.
-            num_warmup (int, optional): Number of warmup steps. Defaults to 500.
+            num_samples (int, optional): Number of samples to draw. Defaults to 500.
+            num_warmup (int, optional): Number of warmup steps. Defaults to 100.
             num_chains (int, optional): Number of chains to run. Defaults to 1.
         """
         nuts_kernel = NUTS(self._model)
