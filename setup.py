@@ -13,10 +13,12 @@ install_requires = (
         "pymc>=5.6.1",
         "pytensor>=2.12.3",
         "tqdm>=4.66.1",
+        "jax>=0.4.13",
+        "numpyro>=0.12.1",
     ],
 )
 
-__version__ = "0.0.9"
+__version__ = "0.1.0"
 
 setup(
     name="flowfunnel",
