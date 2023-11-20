@@ -115,6 +115,7 @@ class PyroFunnel:
         num_samples: int = 500,
         num_warmup: int = 100,
         num_chains: int = 1,
+        progress_bar: bool = True,
     ) -> Dict[str, np.ndarray]:
         """
         Updates the model's data block and generates a new trace.
@@ -128,6 +129,7 @@ class PyroFunnel:
             num_samples (int, optional): Number of samples to draw. Defaults to 500.
             num_warmup (int, optional): Number of warmup steps. Defaults to 100.
             num_chains (int, optional): Number of chains to run. Defaults to 1.
+            progress_bar (bool, optional): Flag to indicate if a progress bar should be displayed. Defaults to False.
 
         Returns:
             Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of model summary statistics.
@@ -135,11 +137,15 @@ class PyroFunnel:
         constant_data_dict = self.get_constant_data_dict(data_block)
         for k, v in constant_data_dict.items():
             self.update_layer_data(k, v)
-        self.run(num_samples, num_warmup, num_chains)
+        self.run(num_samples, num_warmup, num_chains, progress_bar)
         return self.means
 
     def run(
-        self, num_samples: int = 500, num_warmup: int = 100, num_chains: int = 1
+        self,
+        num_samples: int = 500,
+        num_warmup: int = 100,
+        num_chains: int = 1,
+        progress_bar: bool = True,
     ) -> None:
         """Runs the MCMC simulation.
 
@@ -147,6 +153,7 @@ class PyroFunnel:
             num_samples (int, optional): Number of samples to draw. Defaults to 500.
             num_warmup (int, optional): Number of warmup steps. Defaults to 100.
             num_chains (int, optional): Number of chains to run. Defaults to 1.
+            progress_bar (bool, optional): Flag to indicate if a progress bar should be displayed. Defaults to True.
         """
         nuts_kernel = NUTS(self._model)
         self.mcmc = MCMC(
@@ -154,6 +161,7 @@ class PyroFunnel:
             num_samples=num_samples,
             num_warmup=num_warmup,
             num_chains=num_chains,
+            progress_bar=progress_bar,
         )
         self.mcmc.run(jax.random.PRNGKey(0))
         self.means = {k: np.mean(v) for k, v in self.mcmc.get_samples().items()}
@@ -199,6 +207,7 @@ class PyroFunnel:
                 num_samples=num_samples,
                 num_warmup=num_warmup,
                 num_chains=num_chains,
+                progress_bar=False,
             )
             for current_window in windowed_blocks
         )
