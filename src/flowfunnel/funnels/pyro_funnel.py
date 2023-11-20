@@ -80,7 +80,11 @@ class PyroFunnel:
             layer_name (str): The name of the layer to update.
             data (List[float]): The new data for the layer.
         """
-        self.data_dict[layer_name] = standardize_list(data)
+        self.layers[layer_name].raw_data = data
+        standardized_data = standardize_list(data)
+        self.data_dict[layer_name] = standardized_data
+        self.layers[layer_name].standardized_data = standardized_data
+        self.layers[layer_name].state = standardized_data[0]
 
     def run(
         self, num_samples: int = 500, num_warmup: int = 100, num_chains: int = 1
