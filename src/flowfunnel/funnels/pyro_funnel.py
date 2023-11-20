@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional
 
 import jax
+import numpy as np
 import numpyro
 import numpyro.distributions as dist
 from numpyro.infer import MCMC, NUTS
@@ -86,6 +87,52 @@ class PyroFunnel:
         self.layers[layer_name].standardized_data = standardized_data
         self.layers[layer_name].state = standardized_data[0]
 
+    def get_constant_data_dict(
+        self, data_block: List[np.ndarray]
+    ) -> Dict[str, np.ndarray]:
+        """
+        Generates a dictionary of constant data from the given data block.
+
+        This method flattens the layers in the data block and associates them with
+        keys from the model's constant data, creating a dictionary that maps each key
+        to its corresponding standardized array.
+
+        Args:
+            data_block (List[np.ndarray]): A list of numpy arrays representing the data block.
+
+        Returns:
+            Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of constant data.
+        """
+        constant_data_dict = {}
+        for index, key in enumerate(self.layers.keys()):
+            constant_data_dict[key] = data_block[index]
+        return constant_data_dict
+
+    def update_data_block(
+        self,
+        data_block: List[np.ndarray],
+        num_samples: int = 500,
+        num_warmup: int = 100,
+        num_chains: int = 1,
+    ) -> None:
+        """
+        Updates the model's data block and generates a new trace.
+
+        This method first creates a constant data dictionary from the given data block using
+        `get_constant_data_dict`. It then sets this new data into the PyMC model and
+        generates a new trace by sampling the model.
+
+        Args:
+            data_block (List[np.ndarray]): A list of numpy arrays representing the data block.
+            num_samples (int, optional): Number of samples to draw. Defaults to 500.
+            num_warmup (int, optional): Number of warmup steps. Defaults to 100.
+            num_chains (int, optional): Number of chains to run. Defaults to 1.
+        """
+        constant_data_dict = self.get_constant_data_dict(data_block)
+        for k, v in constant_data_dict.items():
+            self.update_layer_data(k, v)
+        self.run(num_samples, num_warmup, num_chains)
+
     def run(
         self, num_samples: int = 500, num_warmup: int = 100, num_chains: int = 1
     ) -> None:
@@ -104,4 +151,46 @@ class PyroFunnel:
             num_chains=num_chains,
         )
         self.mcmc.run(jax.random.PRNGKey(0))
-        self.mcmc.print_summary()
+        self.means = np.asarray(
+            [np.mean(v) for k, v in self.mcmc.get_samples().items()]
+        )
+
+    def rolling_update_data_block(
+        self,
+        data_block: List[np.ndarray],
+        window_size: int,
+        num_samples: int = 500,
+        num_warmup: int = 100,
+        num_chains: int = 1,
+        step: Optional[int] = None,
+    ) -> np.ndarray:
+        """
+        Updates the data block in a rolling window fashion and collects model summary statistics.
+
+        This method iterates over the data block using a window of specified size, updating the
+        model with each new window and collecting the mean values from the model summary after each update.
+
+        Args:
+            data_block (List[np.ndarray]): A list of numpy arrays representing the data block.
+            window_size (int): The size of the rolling window.
+            num_samples (int, optional): Number of samples to draw. Defaults to 500.
+            num_warmup (int, optional): Number of warmup steps. Defaults to 100.
+            num_chains (int, optional): Number of chains to run. Defaults to 1.
+            step (Optional[int], optional): The step size between each window. If None, defaults to half the window size.
+
+        Returns:
+            np.ndarray: An array containing the collected mean values from the model summary.
+        """
+        ans = []
+        if step is None:
+            step = window_size // 2
+        for i in range(0, len(data_block[0]) - window_size + 1, step):
+            block = np.stack(data_block)[:, i : i + window_size]
+            self.update_data_block(
+                data_block=block,
+                num_samples=num_samples,
+                num_warmup=num_warmup,
+                num_chains=num_chains,
+            )
+            ans.append(self.means)
+        return np.stack(ans).transpose()
