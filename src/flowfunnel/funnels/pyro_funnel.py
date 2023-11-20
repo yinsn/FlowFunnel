@@ -163,7 +163,7 @@ class PyroFunnel:
         num_warmup: int = 100,
         num_chains: int = 1,
         step: Optional[int] = None,
-    ) -> np.ndarray:
+    ) -> Dict[str, np.ndarray]:
         """
         Updates the data block in a rolling window fashion and collects model summary statistics.
 
@@ -179,9 +179,10 @@ class PyroFunnel:
             step (Optional[int], optional): The step size between each window. If None, defaults to half the window size.
 
         Returns:
-            np.ndarray: An array containing the collected mean values from the model summary.
+            Dict[str, np.ndarray]: A dictionary mapping layer names to arrays of mean values.
         """
         ans = []
+        rolling_results = {}
         if step is None:
             step = window_size // 2
         for i in range(0, len(data_block[0]) - window_size + 1, step):
@@ -193,4 +194,8 @@ class PyroFunnel:
                 num_chains=num_chains,
             )
             ans.append(self.means)
-        return np.stack(ans).transpose()
+        stack = np.stack(ans).transpose()
+        if self.mcmc is not None:
+            for index, para_name in enumerate(self.mcmc.get_samples().keys()):
+                rolling_results[para_name] = stack[index]
+        return rolling_results
