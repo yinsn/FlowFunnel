@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional
 
+from ..dataloaders import standardize_list
 from .base_pyro import BasePyroLayer as Layer
 
 
@@ -34,6 +35,7 @@ class ARnPyroLayer(Layer):
     ):
         self.name = name
         self.raw_data = data
+        self.standardized_data = standardize_list(data)
         self.is_first_layer = is_first_layer
         self.prev_layer = prev_layer
         self.param_names = (
@@ -52,7 +54,7 @@ class ARnPyroLayer(Layer):
             IndexError: If the index t is out of range of the data.
         """
         if t < len(self.raw_data):
-            new_data = self.raw_data[t]
+            new_data = self.standardized_data[t]
             self.state = (self.state * t + new_data) / (t + 1)
         else:
             raise IndexError("Data index out of range")
