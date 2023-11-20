@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional
 
 import jax
+import numpy as np
 import numpyro
 import numpyro.distributions as dist
 from numpyro.infer import MCMC, NUTS
@@ -33,7 +34,7 @@ class PyroFunnel:
             layer (Layer): The layer to be added.
         """
         self.layers[layer.name] = layer
-        self.data_dict[layer.name] = layer.raw_data
+        self.data_dict[layer.name] = self.normalize_data(layer.raw_data)
 
     def sample_observations(self, t: int) -> None:
         """Sample observations for each layer at a specific time step.
@@ -45,7 +46,7 @@ class PyroFunnel:
             if layer.is_first_layer:
                 obs_mean = layer.params["growth_trend"] * layer.state
             elif layer.prev_layer is not None:
-                current_output = self.layers[layer.prev_layer].raw_data[t]
+                current_output = self.data_dict[layer.prev_layer][t]
                 obs_mean = (
                     layer.params["transition_rate"] * current_output
                     + layer.params["growth_trend"] * layer.state
@@ -72,6 +73,17 @@ class PyroFunnel:
                 layer.update_state(t)
             self.sample_observations(t)
 
+    @staticmethod
+    def normalize_data(data: List[float]) -> List[float]:
+        """Normalizes data to have mean 0 and standard deviation 1."""
+        data_mean = np.mean(data, axis=0)
+        data_std = np.std(data, axis=0)
+        if (data_std != 0).all():
+            data = (data - data_mean) / data_std
+        else:
+            data = np.random.normal(loc=0.0, scale=1.0, size=len(data))
+        return data
+
     def update_layer_data(self, layer_name: str, data: List[float]) -> None:
         """Updates the data for a layer.
 
@@ -79,7 +91,7 @@ class PyroFunnel:
             layer_name (str): The name of the layer to update.
             data (List[float]): The new data for the layer.
         """
-        self.data_dict[layer_name] = data
+        self.data_dict[layer_name] = self.normalize_data(data)
 
     def run(
         self, num_samples: int = 1000, num_warmup: int = 500, num_chains: int = 1
