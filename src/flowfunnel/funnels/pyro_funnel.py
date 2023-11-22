@@ -174,6 +174,7 @@ class PyroFunnel:
         num_warmup: int = 100,
         num_chains: int = 1,
         step: Optional[int] = None,
+        parrellel: bool = False,
     ) -> Dict[str, np.ndarray]:
         """
         Updates the data block in a rolling window fashion and collects model summary statistics.
@@ -201,16 +202,29 @@ class PyroFunnel:
                 :, start_index : start_index + window_size
             ]
             windowed_blocks.append(current_window)
-        model_updates = Parallel(n_jobs=-1)(
-            delayed(self.update_data_block)(
-                data_block=current_window,
-                num_samples=num_samples,
-                num_warmup=num_warmup,
-                num_chains=num_chains,
-                progress_bar=False,
+        if parrellel:
+            model_updates = Parallel(n_jobs=-1)(
+                delayed(self.update_data_block)(
+                    data_block=current_window,
+                    num_samples=num_samples,
+                    num_warmup=num_warmup,
+                    num_chains=num_chains,
+                    progress_bar=False,
+                )
+                for current_window in windowed_blocks
             )
-            for current_window in windowed_blocks
-        )
+        else:
+            model_updates = []
+            for current_window in windowed_blocks:
+                model_updates.append(
+                    self.update_data_block(
+                        data_block=current_window,
+                        num_samples=num_samples,
+                        num_warmup=num_warmup,
+                        num_chains=num_chains,
+                        progress_bar=False,
+                    )
+                )
         summary_statistics: Dict = {key: [] for key in model_updates[0].keys()}
         for d in model_updates:
             for key in summary_statistics.keys():
