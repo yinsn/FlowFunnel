@@ -1,6 +1,8 @@
+import os
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 
+import imageio
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
@@ -58,7 +60,13 @@ class RollingWindowVisualizer:
             for x in range(0, (self.end_date - self.start_date).days, self.interval)
         ]
 
-    def plot_growth_trend(self) -> None:
+    def plot_growth_trend(
+        self,
+        figure_tag: str = "",
+        save_fig: bool = False,
+        file_type: str = "pdf",
+        fix_ylim: bool = False,
+    ) -> None:
         """
         Plots the growth trend from the rolling data.
 
@@ -81,9 +89,18 @@ class RollingWindowVisualizer:
         plt.title("Growth Trends Over Time")
         plt.xlabel("Date")
         plt.ylabel("Value")
-        plt.show()
+        plt.legend(framealpha=0)
+        if fix_ylim:
+            plt.ylim(-0.5, 1)
+            plt.legend(loc="lower left")
 
-    def plot_transition_rate(self) -> None:
+    def plot_transition_rate(
+        self,
+        figure_tag: str = "",
+        save_fig: bool = False,
+        file_type: str = "pdf",
+        fix_ylim: bool = False,
+    ) -> None:
         """
         Plots the transition rate from the rolling data.
 
@@ -93,7 +110,6 @@ class RollingWindowVisualizer:
             key for key in self.rolling_data.keys() if "transition_rate" in key
         ]
         transition_rates = {key: self.rolling_data[key] for key in transition_rate_keys}
-
         plt.figure(figsize=(10, 5))
         for key in transition_rates:
             plt.plot(self.date_range, transition_rates[key], label=key)
@@ -101,9 +117,40 @@ class RollingWindowVisualizer:
         plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=self.interval))
         plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
         plt.gcf().autofmt_xdate()
-
         plt.legend()
         plt.title("Transition Rates Over Time")
         plt.xlabel("Date")
         plt.ylabel("Value")
-        plt.show()
+        plt.legend(framealpha=0)
+        if fix_ylim:
+            plt.ylim(-0.5, 1)
+            plt.legend(loc="lower left")
+
+        if save_fig:
+            plt.savefig(f"transition_rate_from_{figure_tag}.{file_type}")
+
+    def plot_dynamic_curves(
+        self,
+        data_block: np.ndarray,
+        duration: Optional[int] = 300,
+    ) -> None:
+        filenames = []
+        for index in range(len(data_block)):
+            self.rolling_data = data_block[index]
+            filenames.append(f"transition_rate_from_{index}.png")
+            self.plot_transition_rate(
+                figure_tag=str(index), save_fig=True, file_type="png", fix_ylim=True
+            )
+            plt.close()
+
+        with imageio.get_writer(
+            f"dynamic_curves.gif",
+            mode="I",
+            duration=duration,
+            loop=0,
+        ) as writer:
+            for filename in filenames:
+                image = imageio.v2.imread(filename, pilmode="RGBA")
+                writer.append_data(image)
+        for filename in set(filenames):
+            os.remove(filename)
