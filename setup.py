@@ -9,17 +9,15 @@ with (SETUP_DIRECTORY / "README.md").open() as ifs:
 
 install_requires = (
     [
-        "daft>=0.1.2",
+        "imageio>=2.33.0",
         "jax>=0.4.13",
         "joblib>=1.3.2",
         "numpyro>=0.12.0",
-        "pymc>=5.6.1",
-        "pytensor>=2.12.3",
         "tqdm>=4.66.1",
     ],
 )
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 setup(
     name="flowfunnel",
