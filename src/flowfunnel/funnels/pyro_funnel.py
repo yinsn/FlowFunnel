@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import jax
 import numpy as np
@@ -9,6 +9,7 @@ from numpyro.infer import MCMC, NUTS
 
 from ..dataloaders import standardize_list
 from ..layers import ARnPyroLayer as Layer
+from ..parallel import get_logical_processors_count
 
 
 class PyroFunnel:
@@ -174,7 +175,7 @@ class PyroFunnel:
         num_warmup: int = 100,
         num_chains: int = 1,
         step: Optional[int] = None,
-        parrellel: bool = False,
+        parrellel: Union[bool, int] = True,
     ) -> Dict[str, np.ndarray]:
         """
         Updates the data block in a rolling window fashion and collects model summary statistics.
@@ -189,6 +190,7 @@ class PyroFunnel:
             num_warmup (int, optional): Number of warmup steps. Defaults to 100.
             num_chains (int, optional): Number of chains to run. Defaults to 1.
             step (Optional[int], optional): The step size between each window. If None, defaults to half the window size.
+            parrellel (Union[bool, int], optional): Flag to indicate if the windows should be processed in parallel. Defaults to True.
 
         Returns:
             Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of model summary statistics.
@@ -202,8 +204,9 @@ class PyroFunnel:
                 :, start_index : start_index + window_size
             ]
             windowed_blocks.append(current_window)
-        if parrellel:
-            model_updates = Parallel(n_jobs=-1)(
+        if parrellel or parrellel > 1:
+            n_jobs = get_logical_processors_count()
+            model_updates = Parallel(n_jobs=n_jobs)(
                 delayed(self.update_data_block)(
                     data_block=current_window,
                     num_samples=num_samples,
