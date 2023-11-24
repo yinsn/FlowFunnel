@@ -31,7 +31,16 @@ def run_flow_funnel(run: Optional[str]) -> None:
         mpirun_np, n_jobs = calculate_mpi_and_parallel_params()
         print(f"\nmpirun -np {mpirun_np} python3 {run} --n_jobs {n_jobs}")
         subprocess.run(
-            ["mpirun", "-np", str(mpirun_np), "python3", run, "--n_jobs", str(n_jobs)]
+            [
+                "mpirun",
+                "--allow-run-as-root",
+                "-np",
+                str(mpirun_np),
+                "python3",
+                run,
+                "--n_jobs",
+                str(n_jobs),
+            ]
         )
 
 
