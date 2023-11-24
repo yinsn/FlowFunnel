@@ -163,7 +163,7 @@ class BaseDataLoader(ABC):
 
         observed_data_average = (
             [
-                np.stack(self.pre_aggregated_data[column]).mean(axis=0)[
+                np.array(self.pre_aggregated_data[column].to_list()).mean(axis=0)[
                     start_index : end_index + 1
                 ]
                 for column in selected_columns

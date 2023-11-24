@@ -23,6 +23,6 @@ def standardize_list(input_list: List[float]) -> List[float]:
         std = np.std(input_list)
 
     mean = np.mean(input_list)
-    standardized_list = [(x - mean) / std for x in input_list]
+    standardized_list = [float((x - mean) / std) for x in input_list]
 
     return standardized_list
