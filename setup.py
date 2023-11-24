@@ -9,15 +9,17 @@ with (SETUP_DIRECTORY / "README.md").open() as ifs:
 
 install_requires = (
     [
+        "click>=8.1.3",
         "imageio>=2.33.0",
         "jax>=0.4.13",
         "joblib>=1.3.2",
+        "mpi4py>=3.1.5",
         "numpyro>=0.12.0",
         "tqdm>=4.66.1",
     ],
 )
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 setup(
     name="flowfunnel",
@@ -31,6 +33,10 @@ setup(
     description="Leveraging Bayesian hierarchical models to diagnose issues and proactively predict user flow stages in conversion funnels.",
     packages=find_packages("src"),
     package_dir={"": "src"},
+    entry_points="""
+        [console_scripts]
+        flowfunnel=cli:run_flow_funnel
+    """,
     install_requires=install_requires,
     include_package_data=True,
 )
