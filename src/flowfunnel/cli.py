@@ -3,7 +3,7 @@ from typing import Optional
 
 import click
 
-from flowfunnel import calculate_mpi_and_parallel_params
+from .parallel import calculate_mpi_and_parallel_params
 
 
 @click.command()

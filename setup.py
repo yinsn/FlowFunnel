@@ -33,7 +33,7 @@ setup(
     description="Leveraging Bayesian hierarchical models to diagnose issues and proactively predict user flow stages in conversion funnels.",
     packages=find_packages("src"),
     package_dir={"": "src"},
-    entry_points={"console_scripts": ["flowfunnel=cli:run_flow_funnel"]},
+    entry_points={"console_scripts": ["flowfunnel=flowfunnel:run_flow_funnel"]},
     install_requires=install_requires,
     include_package_data=True,
 )
