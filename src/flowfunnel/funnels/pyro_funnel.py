@@ -23,12 +23,14 @@ class PyroFunnel:
         data_dict (Dict[str, List[float]]): Dictionary mapping layer names to their data.
         model (Callable): The model function for MCMC.
         mcmc (Optional[MCMC]): The MCMC object for running simulations.
+        run_prepared (bool): Flag to indicate if the MCMC run is prepared.
     """
 
     def __init__(self) -> None:
         self.layers: Dict[str, Layer] = {}
         self.data_dict: Dict[str, List[float]] = {}
         self.mcmc: Optional[MCMC] = None
+        self.run_prepared = False
 
     def add_layer(self, layer: Layer) -> None:
         """Add a layer to the funnel.
@@ -113,7 +115,7 @@ class PyroFunnel:
     def update_data_block(
         self,
         data_block: List[np.ndarray],
-        num_samples: int = 500,
+        num_samples: int = 300,
         num_warmup: int = 100,
         num_chains: int = 1,
         progress_bar: bool = True,
@@ -141,20 +143,35 @@ class PyroFunnel:
         self.run(num_samples, num_warmup, num_chains, progress_bar)
         return self.means
 
-    def run(
+    def _prepare_run(
         self,
-        num_samples: int = 500,
+        num_samples: int = 300,
         num_warmup: int = 100,
         num_chains: int = 1,
         progress_bar: bool = True,
     ) -> None:
-        """Runs the MCMC simulation.
+        """
+        Prepares and configures an MCMC run with the NUTS kernel.
+
+        This method initializes the NUTS kernel with the provided model and
+        configures the MCMC sampler with the specified parameters. It also sets
+        a flag to indicate that the run is prepared.
 
         Args:
-            num_samples (int, optional): Number of samples to draw. Defaults to 500.
-            num_warmup (int, optional): Number of warmup steps. Defaults to 100.
-            num_chains (int, optional): Number of chains to run. Defaults to 1.
-            progress_bar (bool, optional): Flag to indicate if a progress bar should be displayed. Defaults to True.
+            num_samples (int): The number of samples to draw from the posterior
+                distribution. Defaults to 300.
+            num_warmup (int): The number of warmup (or burn-in) steps. These are
+                steps taken before the actual sampling starts, used for tuning
+                the sampler. Defaults to 100.
+            num_chains (int): The number of chains to run in parallel. Running
+                multiple chains is recommended for assessing convergence.
+                Defaults to 1.
+            progress_bar (bool): Whether to display a progress bar during sampling.
+                Defaults to True.
+
+        Returns:
+            None: This method does not return anything but updates the instance
+            state to indicate that the MCMC run is prepared.
         """
         nuts_kernel = NUTS(self._model)
         self.mcmc = MCMC(
@@ -164,14 +181,55 @@ class PyroFunnel:
             num_chains=num_chains,
             progress_bar=progress_bar,
         )
-        self.mcmc.run(jax.random.PRNGKey(0))
-        self.means = {k: np.mean(v) for k, v in self.mcmc.get_samples().items()}
+        self.run_prepared = True
+
+    def run(
+        self,
+        num_samples: int = 300,
+        num_warmup: int = 100,
+        num_chains: int = 1,
+        progress_bar: bool = True,
+    ) -> None:
+        """
+        Executes the MCMC run with the specified parameters.
+
+        This method runs the MCMC simulation using the NUTS kernel. It either
+        prepares the run by calling '_prepare_run' if it has not been prepared yet,
+        or directly proceeds with the simulation if it has been prepared. After the
+        run, it calculates the mean of the samples obtained for each parameter.
+
+        Args:
+            num_samples (int): The number of samples to draw from the posterior
+                distribution. Defaults to 300.
+            num_warmup (int): The number of warmup (or burn-in) steps. These are
+                steps taken before the actual sampling starts, used for tuning
+                the sampler. Defaults to 100.
+            num_chains (int): The number of chains to run in parallel. Running
+                multiple chains is recommended for assessing convergence.
+                Defaults to 1.
+            progress_bar (bool): Whether to display a progress bar during sampling.
+                Defaults to True.
+        """
+        if self.mcmc is not None:
+            if self.run_prepared is False:
+                self._prepare_run(
+                    num_samples=num_samples,
+                    num_warmup=num_warmup,
+                    num_chains=num_chains,
+                    progress_bar=progress_bar,
+                )
+            else:
+                self.mcmc.num_warmup = 0
+            self.mcmc.run(jax.random.PRNGKey(0))
+            self.means = {k: np.mean(v) for k, v in self.mcmc.get_samples().items()}
+        else:
+            raise ValueError("MCMC run has not been initialized")
 
     def rolling_update_data_block(
         self,
         data_block: List[np.ndarray],
         window_size: int,
-        num_samples: int = 500,
+        num_samples: int = 300,
         num_warmup: int = 100,
         num_chains: int = 1,
         step: Optional[int] = None,
