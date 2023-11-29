@@ -7,8 +7,9 @@ from .parallel import calculate_mpi_and_parallel_params
 
 
 @click.command()
-@click.option("--run", type=click.Path(exists=True), required=False)
-def run_flow_funnel(run: Optional[str]) -> None:
+@click.option("--job", type=click.Path(exists=True), required=False)
+@click.option("--mpi", type=click.Path(exists=True), required=False)
+def run_flow_funnel(run: Optional[str], mpi: Optional[str]) -> None:
     """
     Execute a distributed parallel Python program using MPI.
 
@@ -17,17 +18,16 @@ def run_flow_funnel(run: Optional[str]) -> None:
     `calculate_mpi_and_parallel_params`.
 
     Args:
-        run (Optional[str]): The file path of the Python script to be run. If not provided, an error message
+        job (Optional[str]): The file path of the Python script to be run.
                              is displayed and the program exits.
-
-    Returns:
-        None: This function does not return anything but executes the MPI command with subprocess.
+        mpi (Optional[str]): The file path of the MPI script to be run. Use `use-hwthread-cpus`.
     """
-    if run is None:
-        click.echo(
-            "Error: Please provide a Python file path to run. Usage: flowfunnel --run [PYTHON_FILE_PATH]"
+    if mpi is not None:
+        print(f"\nmpirun -np 1 python3 {mpi}")
+        subprocess.run(
+            ["mpirun", "--allow-run-as-root", "--use-hwthread-cpus", "python3", mpi]
         )
-    else:
+    if run is not None:
         mpirun_np, n_jobs = calculate_mpi_and_parallel_params()
         print(f"\nmpirun -np {mpirun_np} python3 {run} --n_jobs {n_jobs}")
         subprocess.run(
