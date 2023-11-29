@@ -233,7 +233,7 @@ class PyroFunnel:
         num_warmup: int = 100,
         num_chains: int = 1,
         step: Optional[int] = None,
-        parrellel: Union[bool, int] = True,
+        parrellel: Union[bool, int] = False,
     ) -> Dict[str, np.ndarray]:
         """
         Updates the data block in a rolling window fashion and collects model summary statistics.
@@ -248,7 +248,7 @@ class PyroFunnel:
             num_warmup (int, optional): Number of warmup steps. Defaults to 100.
             num_chains (int, optional): Number of chains to run. Defaults to 1.
             step (Optional[int], optional): The step size between each window. If None, defaults to half the window size.
-            parrellel (Union[bool, int], optional): Flag to indicate if the windows should be processed in parallel. Defaults to True.
+            parrellel (Union[bool, int], optional): Flag to indicate if the windows should be processed in parallel. Defaults to False.
 
         Returns:
             Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of model summary statistics.
