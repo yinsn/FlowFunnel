@@ -210,16 +210,16 @@ class PyroFunnel:
             progress_bar (bool): Whether to display a progress bar during sampling.
                 Defaults to True.
         """
+        if self.run_prepared is False:
+            self._prepare_run(
+                num_samples=num_samples,
+                num_warmup=num_warmup,
+                num_chains=num_chains,
+                progress_bar=progress_bar,
+            )
+        elif self.run_prepared is True and self.mcmc is not None:
+            self.mcmc.num_warmup = 0
         if self.mcmc is not None:
-            if self.run_prepared is False:
-                self._prepare_run(
-                    num_samples=num_samples,
-                    num_warmup=num_warmup,
-                    num_chains=num_chains,
-                    progress_bar=progress_bar,
-                )
-            else:
-                self.mcmc.num_warmup = 0
             self.mcmc.run(jax.random.PRNGKey(0))
             self.means = {k: np.mean(v) for k, v in self.mcmc.get_samples().items()}
         else:
