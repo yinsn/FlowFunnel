@@ -13,6 +13,7 @@ install_requires = (
         "imageio>=2.33.0",
         "jax>=0.4.14",
         "joblib>=1.3.2",
+        "matplotlib>=3.7.1",
         "mpi4py>=3.1.5",
         "numpyro>=0.12.0",
         "pandas>=2.1.3",
