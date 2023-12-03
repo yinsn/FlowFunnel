@@ -16,7 +16,7 @@ install_requires = (
         "matplotlib>=3.7.1",
         "mpi4py>=3.1.5",
         "numpyro>=0.12.0",
-        "pandas>=2.1.3",
+        "pandas>=2.0.3",
         "tqdm>=4.66.1",
     ],
 )
