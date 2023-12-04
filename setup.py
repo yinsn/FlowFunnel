@@ -11,7 +11,7 @@ install_requires = (
     [
         "click>=8.1.3",
         "imageio>=2.33.0",
-        "jax>=0.4.13",
+        "jax>=0.4.14",
         "joblib>=1.3.2",
         "matplotlib>=3.7.1",
         "mpi4py>=3.1.5",
