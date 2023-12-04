@@ -1,6 +1,6 @@
 import os
 import pickle as pkl
-from typing import Any
+from typing import Any, Optional
 
 import pandas as pd
 
@@ -11,7 +11,11 @@ class DataFrameLoader(BaseDataLoader):
     "DataFrameLoader class for loading Pandas Dataframe."
 
     def __init__(
-        self, file_path: str, file_name: str, file_type: str = "pkl", **kwargs: Any
+        self,
+        file_path: str,
+        file_name: Optional[str] = None,
+        file_type: str = "pkl",
+        **kwargs: Any
     ) -> None:
         super().__init__(file_path, file_name, file_type, **kwargs)
 

@@ -50,7 +50,7 @@ class BaseDataLoader(ABC):
             self.df.groupby([id_column, date_column])
             .sum()
             .reset_index()
-            .sort_values([id_column, date_column])
+            .sort_values([id_column])
         ).drop(columns=[drop_colum])
 
     def _aggregate_dates(
