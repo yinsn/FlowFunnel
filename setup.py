@@ -17,11 +17,12 @@ install_requires = (
         "mpi4py>=3.1.5",
         "numpyro>=0.12.0",
         "pandas>=2.0.3",
+        "pyarrow>=14.0.1",
         "tqdm>=4.66.1",
     ],
 )
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 setup(
     name="flowfunnel",
