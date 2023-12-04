@@ -7,7 +7,7 @@ from joblib import Parallel, delayed
 from pyarrow import hdfs
 from tqdm import tqdm
 
-from flowfunnel import get_logical_processors_count
+from ..parallel import get_logical_processors_count
 
 hadoop_home = os.environ.get("HADOOP_HOME")
 os.environ["CLASSPATH"] = str(hadoop_home) + "/etc/hadoop/"
