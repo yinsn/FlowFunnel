@@ -36,6 +36,23 @@ class BaseDataLoader(ABC):
                 columns.append(column.split(delimiter)[-1])
             self.df.columns = pd.Index(columns)
 
+    def _aggregate_and_sum(
+        self, id_column: str, date_column: str, drop_colum: str
+    ) -> None:
+        """
+        Aggregate the DataFrame by columns id_column and date_column, and sum the integer values of other columns.
+
+        Args:
+            id_column: The name of the column that contains unique identifiers.
+            date_column: The name of the column that contains the date information.
+        """
+        self.df = (
+            self.df.groupby([id_column, date_column])
+            .sum()
+            .reset_index()
+            .sort_values([id_column, date_column])
+        ).drop(columns=[drop_colum])
+
     def _aggregate_dates(
         self,
         selected_columns: List[str],
