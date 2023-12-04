@@ -38,6 +38,7 @@ class HDFSDataloader:
         batch_size: int,
         mod: int,
         mod_index: int = 1,
+        remainder: int = 0,
         max_file_num: Optional[int] = None,
         num_jobs: Optional[int] = None,
         delimiter: str = "\t",
@@ -50,6 +51,7 @@ class HDFSDataloader:
             batch_size (int): The size of each batch to process.
             mod (int): The divisor for the modulus operation used in filtering.
             mod_index (int): The index of the element in each line to apply the modulus operation.
+            remainder (int): The remainder for the modulus operation used in filtering.
             max_file_num (Optional[int]): The maximum number of files to process. Default is None.
             num_jobs (Optional[int]): The number of parallel jobs to use for processing. Default is None.
             delimiter (str): The delimiter used in the files. Default is tab ('\t').
@@ -59,6 +61,7 @@ class HDFSDataloader:
         self.batch_size = batch_size
         self.mod = mod
         self.mod_index = mod_index
+        self.remainder = remainder
         self.max_file_num = max_file_num
         self.fs = hdfs.connect(
             extra_conf={"fs.hdfs.impl": "org.apache.hadoop.hdfs.DistributedFileSystem"}
@@ -117,8 +120,11 @@ class HDFSDataloader:
                     pbar.update(len(line))
                     decoded_line = line.decode("utf-8")
                     parts = decoded_line.strip("\n").split(self.delimiter)
-                    if self.filter_with_mod(
-                        parts=parts, mod=self.mod, mod_index=self.mod_index
+                    if (
+                        self.filter_with_mod(
+                            parts=parts, mod=self.mod, mod_index=self.mod_index
+                        )
+                        == self.remainder
                     ):
                         batch.append(parts)
                     if len(batch) >= self.batch_size:
@@ -163,7 +169,7 @@ class HDFSDataloader:
                 yield batch
 
     @staticmethod
-    def filter_with_mod(parts: List[str], mod: int, mod_index: int = 1) -> bool:
+    def filter_with_mod(parts: List[str], mod: int, mod_index: int = 1) -> int:
         """
         Filters a line based on a modulus operation.
 
@@ -173,11 +179,10 @@ class HDFSDataloader:
             mod_index (int): The index of the element in parts to apply the modulus operation.
 
         Returns:
-            bool: True if the element at `mod_index` in parts is divisible by `mod`, False otherwise.
+            int: The result of the modulus operation.
+
         """
-        if len(parts) > mod_index:
-            return int(parts[mod_index]) % mod == 0
-        return False
+        return int(parts[mod_index]) % mod
 
     def run(self) -> None:
         """
