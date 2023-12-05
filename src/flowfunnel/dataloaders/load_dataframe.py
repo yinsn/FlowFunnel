@@ -50,6 +50,9 @@ class DataFrameLoader(BaseDataLoader):
             num_parts (Optional[int]): The number of parts to split the dataframe into.
                                        If None, it defaults to the number of logical processors available.
         """
+        directory = "./chunks"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
         if num_parts is None:
             num_parts = get_logical_processors_count()
         else:
@@ -66,4 +69,4 @@ class DataFrameLoader(BaseDataLoader):
                 end_index = len(self.df)
 
             chunk = self.df.iloc[start_index:end_index]
-            chunk.to_pickle(f"chunk_{i+1}.pkl")
+            chunk.to_pickle(f"./chunks/chunk_{i+1}.pkl")
