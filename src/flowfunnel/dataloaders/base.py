@@ -232,3 +232,34 @@ class BaseDataLoader(ABC):
         ).dt.days
 
         return filtered_df
+
+    def get_pre_aggregated_data_with_offset(
+        self, id_column: str, offset_column: str
+    ) -> None:
+        """
+        Processes a DataFrame to create pre-aggregated data with an offset.
+
+        The function pivots the DataFrame on a specified ID column and an offset column,
+        fills missing data, and aggregates the result in a pre-defined structure.
+
+        Args:
+            id_column (str): The name of the column to be used as an index in the pivoted data.
+            offset_column (str): The name of the column to be used as columns in the pivoted data.
+        """
+        max_p_date = self.df[offset_column].max()
+
+        feature_columns = self.df.columns.difference([id_column, offset_column])
+        pivoted_data = {}
+        for feature in feature_columns:
+            pivoted = self.df.pivot(
+                index=id_column, columns=offset_column, values=feature
+            )
+            pivoted = pivoted.reindex(columns=range(max_p_date + 1), fill_value=0)
+            pivoted_data[feature] = pivoted
+
+        self.pre_aggregated_data = pd.DataFrame(
+            {id_column: pivoted_data[next(iter(pivoted_data))].index}
+        )
+        for feature, data in pivoted_data.items():
+            data = data.fillna(0)
+            self.pre_aggregated_data[feature] = data.values.tolist()
