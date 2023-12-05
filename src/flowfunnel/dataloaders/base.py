@@ -199,3 +199,29 @@ class BaseDataLoader(ABC):
             else []
         )
         return observed_data_average
+
+    @staticmethod
+    def filter_and_index_dates(
+        df: pd.DataFrame, start_date: str, end_date: str, date_column: str
+    ) -> pd.DataFrame:
+        """
+        Filter rows of a DataFrame based on a date range and add a date index column.
+
+        Args:
+            df (pd.DataFrame): The input DataFrame.
+            start_date (str): The start date in 'YYYYMMDD' format.
+            end_date (str): The end date in 'YYYYMMDD' format.
+            date_column (str): The name of the column containing date strings.
+
+        Returns:
+            pd.DataFrame: A new DataFrame with filtered rows and a date_index column.
+        """
+        logger.info("filtering and indexing dates...")
+        df[date_column] = pd.to_datetime(df[date_column], format="%Y%m%d")
+        date_range = pd.date_range(start=start_date, end=end_date, freq="D")
+        filtered_df = df[df[date_column].isin(date_range)]
+        filtered_df[date_column] = (
+            filtered_df[date_column] - pd.to_datetime(start_date)
+        ).dt.days
+
+        return filtered_df

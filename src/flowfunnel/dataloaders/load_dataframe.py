@@ -83,6 +83,8 @@ class DataFrameLoader(BaseDataLoader):
         id_column: str,
         date_column: str,
         drop_colum: str,
+        start_date: str,
+        end_date: str,
         num_parts: Optional[int] = None,
     ) -> None:
         """
@@ -91,10 +93,18 @@ class DataFrameLoader(BaseDataLoader):
         Args:
             id_column: The name of the column that contains unique identifiers.
             date_column: The name of the column that contains the date information.
+            start_date (str): The start date in 'YYYYMMDD' format.
+            end_date (str): The end date in 'YYYYMMDD' format.
             num_parts (Optional[int]): The number of parts to split the dataframe into.
                                        If None, it defaults to the number of logical processors available.
         """
         self._aggregate_and_sum(id_column, date_column, drop_colum)
+        self.df = self.filter_and_index_dates(
+            df=self.df,
+            date_column=date_column,
+            start_date=start_date,
+            end_date=end_date,
+        )
         logger.info("start splitting dataframe")
         self.split_dataframe(num_parts)
         logger.info("finish splitting dataframe")
