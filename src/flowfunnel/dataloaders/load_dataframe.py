@@ -82,9 +82,10 @@ class DataFrameLoader(BaseDataLoader):
         self,
         id_column: str,
         date_column: str,
-        drop_colum: str,
+        drop_column: str,
         start_date: str,
         end_date: str,
+        convert_to_numeric: bool = False,
         num_parts: Optional[int] = None,
     ) -> None:
         """
@@ -93,12 +94,19 @@ class DataFrameLoader(BaseDataLoader):
         Args:
             id_column: The name of the column that contains unique identifiers.
             date_column: The name of the column that contains the date information.
+            drop_column: The name of the column to drop.
             start_date (str): The start date in 'YYYYMMDD' format.
             end_date (str): The end date in 'YYYYMMDD' format.
+            convert_to_numeric: Whether to convert the values to numeric.
             num_parts (Optional[int]): The number of parts to split the dataframe into.
                                        If None, it defaults to the number of logical processors available.
         """
-        self._aggregate_and_sum(id_column, date_column, drop_colum)
+        self._aggregate_and_sum(
+            id_column=id_column,
+            date_column=date_column,
+            drop_column=drop_column,
+            convert_to_numeric=convert_to_numeric,
+        )
         self.df = self.filter_and_index_dates(
             df=self.df,
             date_column=date_column,

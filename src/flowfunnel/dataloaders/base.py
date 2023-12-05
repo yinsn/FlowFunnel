@@ -46,7 +46,7 @@ class BaseDataLoader(ABC):
         self,
         id_column: str,
         date_column: str,
-        drop_colum: str,
+        drop_column: str,
         convert_to_numeric: bool = False,
     ) -> None:
         """
@@ -55,11 +55,11 @@ class BaseDataLoader(ABC):
         Args:
             id_column: The name of the column that contains unique identifiers.
             date_column: The name of the column that contains the date information.
-            drop_colum: The name of the column to drop.
+            drop_column: The name of the column to drop.
             convert_to_numeric: Whether to convert the values to numeric.
         """
         logger.info("aggregating and summing data...")
-        self.df = self.df.drop(columns=[drop_colum])
+        self.df = self.df.drop(columns=[drop_column])
         if convert_to_numeric:
             logger.info("converting to numeric...")
             for column in tqdm(self.df.columns):
