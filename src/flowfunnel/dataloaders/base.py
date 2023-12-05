@@ -207,6 +207,35 @@ class BaseDataLoader(ABC):
         )
         return observed_data_average
 
+    def get_observed_data_with_pre_aggregated_data(
+        self, selected_columns: List[str]
+    ) -> List:
+        """
+        Calculates the mean values across selected columns for pre-aggregated data.
+
+        This function computes the average of each selected column in the pre-aggregated data
+        up to the maximum index of the specified offset column.
+
+        Args:
+            selected_columns (List[str]): A list of column names for which the averages are calculated.
+
+        Returns:
+            List[np.ndarray]: A list of NumPy arrays, each representing the average values of a column
+                            from the start index to the end index determined by the offset column.
+        """
+        end_index = len(self.pre_aggregated_data[selected_columns[0]].iloc[0])
+        observed_data_average = (
+            [
+                np.array(self.pre_aggregated_data[column].to_list()).mean(axis=0)[
+                    0 : end_index + 1
+                ]
+                for column in selected_columns
+            ]
+            if self.pre_aggregated_data is not None
+            else []
+        )
+        return observed_data_average
+
     @staticmethod
     def filter_and_index_dates(
         df: pd.DataFrame, start_date: str, end_date: str, date_column: str
