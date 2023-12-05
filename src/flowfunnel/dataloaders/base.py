@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List, Optional
@@ -5,6 +6,11 @@ from typing import List, Optional
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 class BaseDataLoader(ABC):
@@ -46,12 +52,12 @@ class BaseDataLoader(ABC):
             id_column: The name of the column that contains unique identifiers.
             date_column: The name of the column that contains the date information.
         """
-        self.df = (
-            self.df.groupby([id_column, date_column])
-            .sum()
-            .reset_index()
-            .sort_values([id_column])
-        ).drop(columns=[drop_colum])
+        logger.info("aggregating and summing data...")
+        self.df = self.df.drop(columns=[drop_colum])
+        logger.info("summation...")
+        self.df = self.df.groupby([id_column, date_column]).sum()
+        logger.info("sorting...")
+        self.df = self.df.sort_values([id_column]).reset_index(drop=True)
 
     def _aggregate_dates(
         self,

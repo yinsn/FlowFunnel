@@ -1,3 +1,4 @@
+import logging
 import os
 import pickle as pkl
 from typing import Any, Optional
@@ -6,6 +7,11 @@ import pandas as pd
 
 from ..parallel import get_logical_processors_count
 from .base import BaseDataLoader
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 
 class DataFrameLoader(BaseDataLoader):
@@ -70,3 +76,24 @@ class DataFrameLoader(BaseDataLoader):
 
             chunk = self.df.iloc[start_index:end_index]
             chunk.to_pickle(f"./chunks/chunk_{i+1}.pkl")
+
+    def aggregate_and_split(
+        self,
+        id_column: str,
+        date_column: str,
+        drop_colum: str,
+        num_parts: Optional[int] = None,
+    ) -> None:
+        """
+        Aggregate the DataFrame by columns id_column and date_column, and sum the integer values of other columns.
+
+        Args:
+            id_column: The name of the column that contains unique identifiers.
+            date_column: The name of the column that contains the date information.
+            num_parts (Optional[int]): The number of parts to split the dataframe into.
+                                       If None, it defaults to the number of logical processors available.
+        """
+        self._aggregate_and_sum(id_column, date_column, drop_colum)
+        logger.info("start splitting dataframe")
+        self.split_dataframe(num_parts)
+        logger.info("finish splitting dataframe")
