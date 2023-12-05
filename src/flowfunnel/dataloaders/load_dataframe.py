@@ -4,6 +4,7 @@ import pickle as pkl
 from typing import Any, Optional
 
 import pandas as pd
+from tqdm import tqdm
 
 from ..parallel import get_logical_processors_count
 from .base import BaseDataLoader
@@ -67,7 +68,7 @@ class DataFrameLoader(BaseDataLoader):
         dataframe_length = len(self.df)
         chunk_size = dataframe_length // num_parts
 
-        for i in range(num_parts):
+        for i in tqdm(range(num_parts)):
             start_index = i * chunk_size
             end_index = start_index + chunk_size
 
