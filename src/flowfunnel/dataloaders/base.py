@@ -43,7 +43,11 @@ class BaseDataLoader(ABC):
             self.df.columns = pd.Index(columns)
 
     def _aggregate_and_sum(
-        self, id_column: str, date_column: str, drop_colum: str
+        self,
+        id_column: str,
+        date_column: str,
+        drop_colum: str,
+        convert_to_numeric: bool = False,
     ) -> None:
         """
         Aggregate the DataFrame by columns id_column and date_column, and sum the integer values of other columns.
@@ -51,13 +55,16 @@ class BaseDataLoader(ABC):
         Args:
             id_column: The name of the column that contains unique identifiers.
             date_column: The name of the column that contains the date information.
+            drop_colum: The name of the column to drop.
+            convert_to_numeric: Whether to convert the values to numeric.
         """
         logger.info("aggregating and summing data...")
         self.df = self.df.drop(columns=[drop_colum])
-        logger.info("converting to numeric...")
-        for column in tqdm(self.df.columns):
-            if column not in date_column:
-                self.df[column] = pd.to_numeric(self.df[column], errors="ignore")
+        if convert_to_numeric:
+            logger.info("converting to numeric...")
+            for column in tqdm(self.df.columns):
+                if column not in date_column:
+                    self.df[column] = pd.to_numeric(self.df[column], errors="ignore")
         logger.info("summation...")
         self.df = self.df.groupby([id_column, date_column]).sum().reset_index()
         logger.info("sorting...")

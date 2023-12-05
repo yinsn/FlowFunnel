@@ -94,7 +94,7 @@ class HDFSDataloader:
         else:
             self.file_list = sorted(self.file_list)[1:]
 
-    def process_file(self, hdfs_file_path: str, file_size: int) -> List[List[str]]:
+    def process_file(self, hdfs_file_path: str, file_size: int) -> List[List[int]]:
         """
         Processes a single file from HDFS.
 
@@ -107,7 +107,7 @@ class HDFSDataloader:
             file_size (int): The size of the file.
 
         Returns:
-            List[List[str]]: A list of batches, each batch is a list of strings (lines from the file).
+            List[List[int]]: A list of batches, each batch is a list of strings (lines from the file).
         """
         batches = []
         with self.fs.open(hdfs_file_path, "rb") as f, tqdm(
@@ -127,7 +127,8 @@ class HDFSDataloader:
                         )
                         == self.remainder
                     ):
-                        batch.append(parts)
+                        parts_as_int = [int(part) for part in parts]
+                        batch.append(parts_as_int)
                     if len(batch) >= self.batch_size:
                         batches += batch
                         batch = []
@@ -139,14 +140,14 @@ class HDFSDataloader:
             self.save_to_dataframe(batches, file_index)
         return batches
 
-    def save_to_dataframe(self, data: List[List[str]], file_index: int) -> None:
+    def save_to_dataframe(self, data: List[List[int]], file_index: int) -> None:
         """
         Saves the given data into a Pandas dataframe.
 
         The dataframe is saved as a pickle file named 'output_{file_index}.pkl'.
 
         Args:
-            data (List[List[str]]): The data to save.
+            data (List[List[int]]): The data to save.
             file_index (int): The index of the file from which the data was processed.
 
         """
