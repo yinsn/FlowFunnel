@@ -54,8 +54,12 @@ class BaseDataLoader(ABC):
         """
         logger.info("aggregating and summing data...")
         self.df = self.df.drop(columns=[drop_colum])
+        logger.info("converting to numeric...")
+        for column in tqdm(self.df.columns):
+            if column not in date_column:
+                self.df[column] = pd.to_numeric(self.df[column], errors="ignore")
         logger.info("summation...")
-        self.df = self.df.groupby([id_column, date_column]).sum()
+        self.df = self.df.groupby([id_column, date_column]).sum().reset_index()
         logger.info("sorting...")
         self.df = self.df.sort_values([id_column]).reset_index(drop=True)
 
