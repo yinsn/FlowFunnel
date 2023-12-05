@@ -223,6 +223,7 @@ class BaseDataLoader(ABC):
             List[np.ndarray]: A list of NumPy arrays, each representing the average values of a column
                             from the start index to the end index determined by the offset column.
         """
+        logger.info("calculating observed data with pre-aggregated data...")
         end_index = len(self.pre_aggregated_data[selected_columns[0]].iloc[0])
         observed_data_average = (
             [
@@ -275,6 +276,7 @@ class BaseDataLoader(ABC):
             id_column (str): The name of the column to be used as an index in the pivoted data.
             offset_column (str): The name of the column to be used as columns in the pivoted data.
         """
+        logger.info("creating pre-aggregated data...")
         max_p_date = self.df[offset_column].max()
 
         feature_columns = self.df.columns.difference([id_column, offset_column])
@@ -292,3 +294,4 @@ class BaseDataLoader(ABC):
         for feature, data in pivoted_data.items():
             data = data.fillna(0)
             self.pre_aggregated_data[feature] = data.values.tolist()
+        logger.info("pre-aggregated data created")
