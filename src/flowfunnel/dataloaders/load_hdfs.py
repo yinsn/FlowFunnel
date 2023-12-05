@@ -94,7 +94,7 @@ class HDFSDataloader:
         else:
             self.file_list = sorted(self.file_list)[1:]
 
-    def process_file(self, hdfs_file_path: str, file_size: int) -> List[List[int]]:
+    def process_file(self, hdfs_file_path: str, file_size: int) -> List:
         """
         Processes a single file from HDFS.
 
@@ -107,14 +107,14 @@ class HDFSDataloader:
             file_size (int): The size of the file.
 
         Returns:
-            List[List[int]]: A list of batches, each batch is a list of strings (lines from the file).
+            List: A list of batches, each batch is a list of strings (lines from the file).
         """
         batches = []
         with self.fs.open(hdfs_file_path, "rb") as f, tqdm(
             total=file_size, unit="B", unit_scale=True, desc=hdfs_file_path
         ) as pbar:
             reader = io.BufferedReader(f, buffer_size=1024 * 1024 * 16)
-            batch = []
+            batch: List = []
             while True:
                 line = reader.readline()
                 if line:
@@ -127,7 +127,10 @@ class HDFSDataloader:
                         )
                         == self.remainder
                     ):
-                        parts_as_int = [int(part) for part in parts]
+                        batch = []
+                        parts_as_int = [
+                            int(part) if part.isdigit() else part for part in parts
+                        ]
                         batch.append(parts_as_int)
                     if len(batch) >= self.batch_size:
                         batches += batch
@@ -140,14 +143,14 @@ class HDFSDataloader:
             self.save_to_dataframe(batches, file_index)
         return batches
 
-    def save_to_dataframe(self, data: List[List[int]], file_index: int) -> None:
+    def save_to_dataframe(self, data: List, file_index: int) -> None:
         """
         Saves the given data into a Pandas dataframe.
 
         The dataframe is saved as a pickle file named 'output_{file_index}.pkl'.
 
         Args:
-            data (List[List[int]]): The data to save.
+            data (List): The data to save.
             file_index (int): The index of the file from which the data was processed.
 
         """
