@@ -10,7 +10,8 @@ from tqdm import tqdm
 from ..parallel import get_logical_processors_count
 
 hadoop_home = os.environ.get("HADOOP_HOME")
-os.environ["CLASSPATH"] = str(hadoop_home) + "/etc/hadoop/"
+os.environ["HADOOP_CONF_DIR"] = str(hadoop_home) + "/etc/hadoop/"
+LOGICAL_PROCESSORS_COUNT = get_logical_processors_count()
 
 
 class HDFSDataloader:
@@ -67,7 +68,7 @@ class HDFSDataloader:
             extra_conf={"fs.hdfs.impl": "org.apache.hadoop.hdfs.DistributedFileSystem"}
         )
         if num_jobs is None:
-            self.num_jobs = get_logical_processors_count()
+            self.num_jobs = LOGICAL_PROCESSORS_COUNT
         else:
             self.num_jobs = num_jobs
         self.delimiter = delimiter
