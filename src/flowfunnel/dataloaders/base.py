@@ -277,7 +277,7 @@ class BaseDataLoader(ABC):
             offset_column (str): The name of the column to be used as columns in the pivoted data.
         """
         logger.info("creating pre-aggregated data...")
-        max_p_date = self.df[offset_column].max()
+        max_p_date = int(self.df[offset_column].max())
 
         feature_columns = self.df.columns.difference([id_column, offset_column])
         pivoted_data = {}
