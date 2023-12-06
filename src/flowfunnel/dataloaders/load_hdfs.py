@@ -95,7 +95,7 @@ class HDFSDataloader:
             self.file_list = sorted(self.file_list)[1:]
 
     def process_file(
-        self, hdfs_file_path: str, file_size: int, mininterval: int = 3000
+        self, hdfs_file_path: str, file_size: int, mininterval: int = 180
     ) -> List:
         """
         Processes a single file from HDFS.
@@ -107,7 +107,7 @@ class HDFSDataloader:
         Args:
             hdfs_file_path (str): The path to the file in HDFS.
             file_size (int): The size of the file.
-            mininterval (int): The minimum interval for updating the progress bar. Default is 3000.
+            mininterval (int): The minimum interval for updating the progress bar. Default is 180.
 
         Returns:
             List: A list of batches, each batch is a list of strings (lines from the file).
