@@ -24,7 +24,6 @@ class HDFSDataloader:
 
     Attributes:
         hdfs_path (str): The HDFS path to read files from.
-        batch_size (int): The size of each batch to process.
         mod (int): The divisor for the modulus operation used in filtering.
         mod_index (int): The index of the element in each line to apply the modulus operation.
         max_file_num (Optional[int]): The maximum number of files to process.
@@ -36,7 +35,6 @@ class HDFSDataloader:
     def __init__(
         self,
         hdfs_path: str,
-        batch_size: int,
         mod: int,
         mod_index: int = 1,
         remainder: int = 0,
@@ -49,7 +47,6 @@ class HDFSDataloader:
 
         Args:
             hdfs_path (str): The HDFS path to read files from.
-            batch_size (int): The size of each batch to process.
             mod (int): The divisor for the modulus operation used in filtering.
             mod_index (int): The index of the element in each line to apply the modulus operation.
             remainder (int): The remainder for the modulus operation used in filtering.
@@ -59,7 +56,6 @@ class HDFSDataloader:
 
         """
         self.hdfs_path = hdfs_path
-        self.batch_size = batch_size
         self.mod = mod
         self.mod_index = mod_index
         self.remainder = remainder
@@ -100,9 +96,8 @@ class HDFSDataloader:
         """
         Processes a single file from HDFS.
 
-        Reads a file from HDFS, splits it into batches based on `self.batch_size`,
-        filters each batch using `filter_with_mod`, and then saves the batches to
-        dataframes.
+        Reads a file from HDFS, splits it into batches based on filters each batch using `filter_with_mod`,
+        and then saves the batches to dataframes.
 
         Args:
             hdfs_file_path (str): The path to the file in HDFS.
@@ -112,7 +107,8 @@ class HDFSDataloader:
         Returns:
             List: A list of batches, each batch is a list of strings (lines from the file).
         """
-        batches = []
+        batches: List = []
+        batch: List = []
         with self.fs.open(hdfs_file_path, "rb") as f, tqdm(
             total=file_size,
             unit="B",
@@ -121,7 +117,6 @@ class HDFSDataloader:
             mininterval=mininterval,
         ) as pbar:
             reader = io.BufferedReader(f, buffer_size=1024 * 1024 * 16)
-            batch: List = []
             while True:
                 line = reader.readline()
                 if line:
@@ -139,15 +134,14 @@ class HDFSDataloader:
                             int(part) if part.isdigit() else part for part in parts
                         ]
                         batch.append(parts_as_int)
-                    if len(batch) >= self.batch_size:
-                        batches += batch
-                        batch = []
+                    batches += batch
+                    batch = []
                 else:
                     if batch:
                         batches += batch
                     break
-            file_index = self.file_list.index(hdfs_file_path)
-            self.save_to_dataframe(batches, file_index)
+        file_index = self.file_list.index(hdfs_file_path)
+        self.save_to_dataframe(batches, file_index)
         return batches
 
     def save_to_dataframe(self, data: List, file_index: int) -> None:
