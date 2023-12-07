@@ -24,6 +24,7 @@ class DataFrameLoader(BaseDataLoader):
         file_name: Optional[str] = None,
         save_path: str = "./chunks",
         file_type: str = "pkl",
+        redundant_cpu_cores: int = 2,
         **kwargs: Any,
     ) -> None:
         super().__init__(file_path, file_name, file_type, **kwargs)
@@ -32,6 +33,7 @@ class DataFrameLoader(BaseDataLoader):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         self.save_path = save_path
+        self.redundant_cpu_cores = redundant_cpu_cores
 
     def load_data(self) -> pd.DataFrame:
         """Load data from DataFrame."""
@@ -67,9 +69,11 @@ class DataFrameLoader(BaseDataLoader):
         if not os.path.exists(directory):
             os.makedirs(directory)
         if num_parts is None:
-            num_parts = get_logical_processors_count()
+            num_parts = get_logical_processors_count() - self.redundant_cpu_cores
         else:
-            num_parts = min(num_parts, get_logical_processors_count())
+            num_parts = min(
+                num_parts, get_logical_processors_count() - self.redundant_cpu_cores
+            )
 
         dataframe_length = len(self.df)
         chunk_size = dataframe_length // num_parts
