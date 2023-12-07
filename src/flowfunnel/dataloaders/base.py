@@ -22,11 +22,13 @@ class BaseDataLoader(ABC):
         file_name: Optional[str] = None,
         file_type: str = "csv",
         max_rows: Optional[int] = None,
+        convert_to_numeric: bool = False,
     ) -> None:
         self.file_path = file_path
         self.file_type = file_type
         self.file_name = file_name
         self.max_rows = max_rows
+        self.convert_to_numeric = convert_to_numeric
         self.df = self.load_data()
 
     @abstractmethod
