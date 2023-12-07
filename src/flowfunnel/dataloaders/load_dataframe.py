@@ -27,6 +27,7 @@ class DataFrameLoader(BaseDataLoader):
         **kwargs: Any,
     ) -> None:
         super().__init__(file_path, file_name, file_type, **kwargs)
+        logger.info("file_path is %s", file_path)
         logger.info("save_path is %s", save_path)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
