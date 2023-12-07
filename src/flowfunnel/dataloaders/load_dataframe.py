@@ -22,10 +22,15 @@ class DataFrameLoader(BaseDataLoader):
         self,
         file_path: str,
         file_name: Optional[str] = None,
+        save_path: str = "./chunks",
         file_type: str = "pkl",
         **kwargs: Any,
     ) -> None:
         super().__init__(file_path, file_name, file_type, **kwargs)
+        logger.info("save_path is %s", save_path)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        self.save_path = save_path
 
     def load_data(self) -> pd.DataFrame:
         """Load data from DataFrame."""
@@ -76,7 +81,7 @@ class DataFrameLoader(BaseDataLoader):
                 end_index = len(self.df)
 
             chunk = self.df.iloc[start_index:end_index]
-            chunk.to_pickle(f"./chunks/chunk_{i+1}.pkl")
+            chunk.to_pickle(f"{self.save_path}/chunk_{i+1}.pkl")
 
     def aggregate_and_split(
         self,
