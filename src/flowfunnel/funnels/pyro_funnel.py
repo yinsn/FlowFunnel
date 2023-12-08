@@ -107,9 +107,9 @@ class PyroFunnel:
         Returns:
             Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of constant data.
         """
-        constant_data_dict = {}
-        for index, key in enumerate(self.layers.keys()):
-            constant_data_dict[key] = data_block[index]
+        constant_data_dict = {
+            key: value for key, value in zip(self.layers.keys(), data_block)
+        }
         return constant_data_dict
 
     def update_data_block(
