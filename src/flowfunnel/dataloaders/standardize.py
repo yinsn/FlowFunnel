@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 
 
-def standardize_list(input_list: List[float]) -> List[float]:
+def standardize_list(input_list: List[float]) -> List:
     """
     Standardize the input list of floats to have a mean of 0 and a standard deviation of 1.
 
@@ -16,13 +16,13 @@ def standardize_list(input_list: List[float]) -> List[float]:
                      of the same length with mean 0 and standard deviation 1.
 
     """
+    input_array = np.array(input_list)
+    std = input_array.std()
 
-    std = np.std(input_list)
     if std == 0:
-        input_list = list(np.random.normal(0, 1, len(input_list)))
-        std = np.std(input_list)
+        standardized_array = np.random.normal(0, 1, len(input_list))
+    else:
+        mean = input_array.mean()
+        standardized_array = (input_array - mean) / std
 
-    mean = np.mean(input_list)
-    standardized_list = [float((x - mean) / std) for x in input_list]
-
-    return standardized_list
+    return list(standardized_array)

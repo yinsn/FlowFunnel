@@ -139,7 +139,7 @@ class PyroFunnel:
         """
         constant_data_dict = self.get_constant_data_dict(data_block)
         for k, v in constant_data_dict.items():
-            self.update_layer_data(k, v)
+            self.update_layer_data(k, list(v))
         self.run(num_samples, num_warmup, num_chains, progress_bar)
         return self.means
 
