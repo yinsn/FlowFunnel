@@ -87,7 +87,7 @@ class PyroFunnel:
         """
         self.layers[layer_name].raw_data = data
         standardized_data = standardize_list(data)
-        self.data_dict[layer_name] = standardized_data
+        self.data_dict.update({layer_name: standardized_data})
         self.layers[layer_name].standardized_data = standardized_data
         self.layers[layer_name].state = standardized_data[0]
 
