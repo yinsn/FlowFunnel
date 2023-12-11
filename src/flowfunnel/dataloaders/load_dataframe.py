@@ -1,7 +1,7 @@
 import logging
 import os
 import pickle as pkl
-from typing import Any, Optional
+from typing import Any, List, Optional
 
 import pandas as pd
 from tqdm import tqdm
@@ -53,6 +53,41 @@ class DataFrameLoader(BaseDataLoader):
 
         return df
 
+    def filter_with_percentiles(
+        self,
+        columns: List[str],
+        percentiles: Optional[List] = None,
+        truncated_quantile: float = 0.98,
+    ) -> None:
+        """
+        Filters the DataFrame based on specified percentiles for given columns.
+
+        This method applies a filter to each column in the provided list, using either the specified
+        percentiles or a default truncated quantile value. Rows where any of the specified columns exceed
+        the corresponding percentile threshold are retained in the DataFrame.
+
+        Args:
+            columns (List[str]): The list of column names to apply the percentile filter on.
+            percentiles (Optional[List[float]], optional): A list of percentile values (ranging from 0 to 1)
+                corresponding to each column in `columns`. If None, uses `truncated_quantile` for all columns.
+                Defaults to None.
+            truncated_quantile (float, optional): The default percentile value to use for filtering if
+                `percentiles` is None. Defaults to 0.98.
+        """
+        logger.info("filtering with percentiles")
+        filter_condition = pd.Series([False] * len(self.df))
+        if percentiles is None:
+            percentiles = len(columns) * [truncated_quantile]
+        for column, percentile in zip(columns, percentiles):
+            threshold = (
+                self.df[column]
+                .describe(percentiles=[percentile])
+                .loc[f"{int(percentile*100)}%"]
+            )
+            condition = self.df[column] > threshold
+            filter_condition = filter_condition | condition
+        self.df = self.df[filter_condition]
+
     def split_dataframe(self, num_parts: Optional[int] = None) -> None:
         """
         Splits the loaded dataframe into smaller chunks and saves them as pickle files.
@@ -97,6 +132,7 @@ class DataFrameLoader(BaseDataLoader):
         end_date: str,
         convert_to_numeric: bool = False,
         num_parts: Optional[int] = None,
+        filter_columns: Optional[List[str]] = None,
     ) -> None:
         """
         Aggregate the DataFrame by columns id_column and date_column, and sum the integer values of other columns.
@@ -110,6 +146,7 @@ class DataFrameLoader(BaseDataLoader):
             convert_to_numeric: Whether to convert the values to numeric.
             num_parts (Optional[int]): The number of parts to split the dataframe into.
                                        If None, it defaults to the number of logical processors available.
+            filter_columns (Optional[List[str]]): The list of columns to filter with percentiles.
         """
         self._aggregate_and_sum(
             id_column=id_column,
@@ -123,6 +160,8 @@ class DataFrameLoader(BaseDataLoader):
             start_date=start_date,
             end_date=end_date,
         )
+        if filter_columns is not None:
+            self.filter_with_percentiles(filter_columns)
         logger.info("start splitting dataframe")
         self.split_dataframe(num_parts)
         logger.info("finish splitting dataframe")
