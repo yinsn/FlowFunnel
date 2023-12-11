@@ -53,40 +53,55 @@ class DataFrameLoader(BaseDataLoader):
 
         return df
 
+    @staticmethod
+    def count_non_zero(lst: list[float]) -> int:
+        """Count the number of non-zero elements in a list.
+
+        Args:
+            lst (list[float]): The list of floats.
+
+        Returns:
+            int: The number of non-zero elements.
+        """
+        return sum(1 for x in lst if x != 0)
+
     def filter_with_percentiles(
         self,
         columns: List[str],
         percentiles: Optional[List] = None,
-        truncated_quantile: float = 0.98,
+        truncated_quantile: float = 0.97,
     ) -> None:
         """
-        Filters the DataFrame based on specified percentiles for given columns.
+        Filters the pre-aggregated data of the class based on the percentiles of specified columns.
 
-        This method applies a filter to each column in the provided list, using either the specified
-        percentiles or a default truncated quantile value. Rows where any of the specified columns exceed
-        the corresponding percentile threshold are retained in the DataFrame.
+        This method modifies the pre_aggregated_data attribute of the class by filtering out
+        rows based on a dynamic threshold determined by the percentiles of non-zero counts
+        in each specified column. If percentiles for each column are not provided, a default
+        truncated quantile value is used for all columns.
 
         Args:
-            columns (List[str]): The list of column names to apply the percentile filter on.
-            percentiles (Optional[List[float]], optional): A list of percentile values (ranging from 0 to 1)
-                corresponding to each column in `columns`. If None, uses `truncated_quantile` for all columns.
-                Defaults to None.
-            truncated_quantile (float, optional): The default percentile value to use for filtering if
-                `percentiles` is None. Defaults to 0.98.
+            columns: A list of column names in the pre_aggregated_data DataFrame to be considered for filtering.
+            percentiles: An optional list of percentile values corresponding to each column in `columns`.
+                         If None, all columns use the `truncated_quantile` value. Defaults to None.
+            truncated_quantile: A float value representing the default percentile to use for filtering
+                                when specific percentiles are not provided. Defaults to 0.97.
         """
         logger.info("filtering with percentiles")
-        filter_condition = pd.Series([False] * len(self.df))
+        filter_condition = pd.Series([False] * len(self.pre_aggregated_data))
         if percentiles is None:
             percentiles = len(columns) * [truncated_quantile]
         for column, percentile in zip(columns, percentiles):
+            self.pre_aggregated_data["none_zeros"] = self.pre_aggregated_data[
+                column
+            ].apply(self.count_non_zero)
             threshold = (
-                self.df[column]
+                self.pre_aggregated_data["none_zeros"]
                 .describe(percentiles=[percentile])
                 .loc[f"{int(percentile*100)}%"]
             )
-            condition = self.df[column] > threshold
+            condition = self.pre_aggregated_data["none_zeros"] > threshold
             filter_condition = filter_condition | condition
-        self.df = self.df[filter_condition]
+        self.pre_aggregated_data = self.pre_aggregated_data[filter_condition]
 
     def split_dataframe(self, num_parts: Optional[int] = None) -> None:
         """
