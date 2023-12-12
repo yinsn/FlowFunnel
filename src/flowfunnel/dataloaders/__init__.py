@@ -1,4 +1,5 @@
 from .base import BaseDataLoader
+from .download_hdfs import HDFSDownloader
 from .generate_date_pairs import generate_week_pairs
 from .load_csv import CSVLoader
 from .load_dataframe import DataFrameLoader
@@ -14,6 +15,7 @@ __all__ = [
     "generate_week_pairs",
     "HDFSDataloader",
     "HDFSDataUploader",
+    "HDFSDownloader",
     "standardize_list",
     "TSVLoader",
 ]
