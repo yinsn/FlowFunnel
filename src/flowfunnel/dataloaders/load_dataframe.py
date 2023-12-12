@@ -69,7 +69,7 @@ class DataFrameLoader(BaseDataLoader):
         self,
         columns: List[str],
         percentiles: Optional[List] = None,
-        truncated_quantile: float = 0.95,
+        truncated_quantile: float = 0.97,
     ) -> None:
         """
         Filters the pre-aggregated data of the class based on the percentiles of specified columns.
