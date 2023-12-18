@@ -1,8 +1,7 @@
-from typing import Dict, List, Optional
+from typing import List
 
 import numpyro
 import numpyro.distributions as dist
-from numpyro.infer import MCMC
 
 from ..dataloaders import standardize_list
 from ..layers import ARnPyroLayer as Layer
@@ -14,20 +13,10 @@ class PyroFunnel(BaseFunnel):
 
     This class manages layers in a hierarchical Bayesian model, allowing for
     the addition of layers, sampling observations, and running MCMC simulations.
-
-    Attributes:
-        layers (Dict[str, Layer]): Dictionary of layers in the funnel.
-        data_dict (Dict[str, List[float]]): Dictionary mapping layer names to their data.
-        model (Callable): The model function for MCMC.
-        mcmc (Optional[MCMC]): The MCMC object for running simulations.
-        run_prepared (bool): Flag to indicate if the MCMC run is prepared.
     """
 
     def __init__(self) -> None:
-        self.layers: Dict[str, Layer] = {}
-        self.data_dict: Dict[str, List[float]] = {}
-        self.mcmc: Optional[MCMC] = None
-        self.run_prepared = False
+        super().__init__()
 
     def add_layer(self, layer: Layer) -> None:
         """Add a layer to the funnel.
