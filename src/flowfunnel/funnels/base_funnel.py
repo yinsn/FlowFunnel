@@ -40,15 +40,6 @@ class BaseFunnel:
         pass
 
     @abstractmethod
-    def sample_observations(self, t: int) -> None:
-        """Samples observations from the model.
-
-        Args:
-            t (int): The current timestep.
-        """
-        pass
-
-    @abstractmethod
     def update_layer_data(self, layer_name: str, data: List[float]) -> None:
         """Updates the data for a layer.
 
