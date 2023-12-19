@@ -3,8 +3,6 @@ from typing import Dict, List, Optional, Union
 
 import jax
 import numpy as np
-import numpyro
-import numpyro.distributions as dist
 from joblib import Parallel, delayed
 from numpyro.infer import MCMC, NUTS
 
@@ -60,19 +58,10 @@ class BaseFunnel:
         """
         pass
 
+    @abstractmethod
     def _model(self) -> None:
-        """Defines the model for MCMC simulation."""
-        for layer in self.layers.values():
-            layer.params = {
-                name: numpyro.sample(f"{layer.name}_{name}", dist.Normal(0, 1))
-                for name in layer.param_names
-            }
-
-        max_timesteps = max(len(data) for data in self.data_dict.values())
-        for t in range(1, max_timesteps):
-            for layer in self.layers.values():
-                layer.update_state(t)
-            self.sample_observations(t)
+        """Defines the model for MCMC."""
+        pass
 
     def get_constant_data_dict(
         self, data_block: List[np.ndarray]

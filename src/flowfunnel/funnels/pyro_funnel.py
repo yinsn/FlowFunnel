@@ -62,3 +62,17 @@ class PyroFunnel(BaseFunnel):
         self.data_dict.update({layer_name: standardized_data})
         self.layers[layer_name].standardized_data = standardized_data
         self.layers[layer_name].state = standardized_data[0]
+
+    def _model(self) -> None:
+        """Defines the model for MCMC."""
+        for layer in self.layers.values():
+            layer.params = {
+                name: numpyro.sample(f"{layer.name}_{name}", dist.Normal(0, 1))
+                for name in layer.param_names
+            }
+
+        max_timesteps = max(len(data) for data in self.data_dict.values())
+        for t in range(1, max_timesteps):
+            for layer in self.layers.values():
+                layer.update_state(t)
+            self.sample_observations(t)
