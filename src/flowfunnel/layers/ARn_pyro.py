@@ -32,17 +32,18 @@ class ARnPyroLayer(Layer):
         data: List[float],
         is_first_layer: bool = False,
         prev_layer: Optional[str] = None,
-    ):
-        self.name = name
-        self.raw_data = data
-        self.standardized_data = standardize_list(data)
-        self.is_first_layer = is_first_layer
-        self.prev_layer = prev_layer
+    ) -> None:
+        super().__init__(name, data, is_first_layer, prev_layer)
+        self.standardized_data = standardize_list(self.raw_data)
         self.param_names = (
-            ["growth_trend"] if is_first_layer else ["transition_rate", "growth_trend"]
+            ["growth_trend"]
+            if self.is_first_layer
+            else ["transition_rate", "growth_trend"]
         )
         self.params: Dict = {}
-        self.state: float = self.standardized_data[0] if data is not None else 0
+        self.state: float = (
+            self.standardized_data[0] if self.raw_data is not None else 0
+        )
 
     def update_state(self, t: int) -> None:
         """Update the state of the layer based on the new data at time t.

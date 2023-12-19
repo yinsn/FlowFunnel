@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
-from typing import List
+from abc import ABC
+from typing import List, Optional
 
 
 class BasePyroLayer(ABC):
@@ -11,14 +11,18 @@ class BasePyroLayer(ABC):
     Attributes:
         name (str): The name of the layer.
         raw_data (List[float]): The raw data associated with this layer.
-        state (float): The current state of the layer, derived from the data.
-
-    Args:
-        name (str): The name of the layer.
-        data (List[float]): The raw data associated with this layer.
+        is_first_layer (bool): Flag indicating if this is the first layer.
+        prev_layer (Optional[Layer]): Reference to the previous layer in the hierarchy.
     """
 
-    def __init__(self, name: str, data: List[float]):
+    def __init__(
+        self,
+        name: str,
+        data: List[float],
+        is_first_layer: bool = False,
+        prev_layer: Optional[str] = None,
+    ):
         self.name: str = name
         self.raw_data: List[float] = data
-        self.state: float = sum(data) / len(data) if data else 0
+        self.is_first_layer = is_first_layer
+        self.prev_layer = prev_layer
