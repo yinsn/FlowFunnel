@@ -32,15 +32,15 @@ class ARnPyroLayer(Layer):
         data: List[float],
         is_first_layer: bool = False,
         prev_layer: Optional[str] = None,
+        params: dict = {},
     ) -> None:
-        super().__init__(name, data, is_first_layer, prev_layer)
+        super().__init__(name, data, is_first_layer, prev_layer, params)
         self.standardized_data = standardize_list(self.raw_data)
         self.param_names = (
             ["growth_trend"]
             if self.is_first_layer
             else ["transition_rate", "growth_trend"]
         )
-        self.params: Dict = {}
         self.state: float = (
             self.standardized_data[0] if self.raw_data is not None else 0
         )

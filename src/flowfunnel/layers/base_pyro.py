@@ -13,6 +13,7 @@ class BasePyroLayer(ABC):
         raw_data (List[float]): The raw data associated with this layer.
         is_first_layer (bool): Flag indicating if this is the first layer.
         prev_layer (Optional[Layer]): Reference to the previous layer in the hierarchy.
+        params (dict): Dictionary of parameters for this layer.
     """
 
     def __init__(
@@ -21,8 +22,10 @@ class BasePyroLayer(ABC):
         data: List[float],
         is_first_layer: bool = False,
         prev_layer: Optional[str] = None,
+        params: dict = {},
     ):
         self.name: str = name
         self.raw_data: List[float] = data
         self.is_first_layer = is_first_layer
         self.prev_layer = prev_layer
+        self.params = params
