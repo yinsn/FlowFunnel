@@ -1,10 +1,13 @@
-from typing import List
+from typing import Dict, List, Optional, Union
 
+import numpy as np
 import numpyro
 import numpyro.distributions as dist
+from joblib import Parallel, delayed
 
 from ..dataloaders import standardize_list
 from ..layers import ARnPyroLayer as Layer
+from ..parallel import get_logical_processors_count
 from .base_funnel import BaseFunnel
 
 
@@ -76,3 +79,104 @@ class PyroFunnel(BaseFunnel):
             for layer in self.layers.values():
                 layer.update_state(t)
             self.sample_observations(t)
+
+    def update_data_block(
+        self,
+        data_block: List[np.ndarray],
+        num_samples: int = 300,
+        num_warmup: int = 100,
+        num_chains: int = 1,
+        progress_bar: bool = True,
+    ) -> Dict[str, np.ndarray]:
+        """
+        Updates the model's data block and generates a new trace.
+
+        This method first creates a constant data dictionary from the given data block using
+        `get_constant_data_dict`. It then sets this new data into the PyMC model and
+        generates a new trace by sampling the model.
+
+        Args:
+            data_block (List[np.ndarray]): A list of numpy arrays representing the data block.
+            num_samples (int, optional): Number of samples to draw. Defaults to 500.
+            num_warmup (int, optional): Number of warmup steps. Defaults to 100.
+            num_chains (int, optional): Number of chains to run. Defaults to 1.
+            progress_bar (bool, optional): Flag to indicate if a progress bar should be displayed. Defaults to False.
+
+        Returns:
+            Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of model summary statistics.
+        """
+        constant_data_dict = self.get_constant_data_dict(data_block)
+        for k, v in constant_data_dict.items():
+            self.update_layer_data(k, list(v))
+        self.run(num_samples, num_warmup, num_chains, progress_bar)
+        return self.means
+
+    def rolling_update_data_block(
+        self,
+        data_block: List[np.ndarray],
+        window_size: int,
+        num_samples: int = 300,
+        num_warmup: int = 100,
+        num_chains: int = 1,
+        step: Optional[int] = None,
+        parrellel: Union[bool, int] = False,
+    ) -> Dict[str, np.ndarray]:
+        """
+        Updates the data block in a rolling window fashion and collects model summary statistics.
+
+        This method iterates over the data block using a window of specified size, updating the
+        model with each new window and collecting the mean values from the model summary after each update.
+
+        Args:
+            data_block (List[np.ndarray]): A list of numpy arrays representing the data block.
+            window_size (int): The size of the rolling window.
+            num_samples (int, optional): Number of samples to draw. Defaults to 500.
+            num_warmup (int, optional): Number of warmup steps. Defaults to 100.
+            num_chains (int, optional): Number of chains to run. Defaults to 1.
+            step (Optional[int], optional): The step size between each window. If None, defaults to half the window size.
+            parrellel (Union[bool, int], optional): Flag to indicate if the windows should be processed in parallel. Defaults to False.
+
+        Returns:
+            Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of model summary statistics.
+        """
+        windowed_blocks = []
+        stacked_data_sequences = np.stack(data_block)
+        if step is None:
+            step = window_size // 2
+        for start_index in range(0, len(data_block[0]) - window_size + 1, step):
+            current_window = stacked_data_sequences[
+                :, start_index : start_index + window_size
+            ]
+            windowed_blocks.append(current_window)
+        if parrellel or parrellel > 1:
+            n_jobs = get_logical_processors_count()
+            model_updates = Parallel(n_jobs=n_jobs)(
+                delayed(self.update_data_block)(
+                    data_block=current_window,
+                    num_samples=num_samples,
+                    num_warmup=num_warmup,
+                    num_chains=num_chains,
+                    progress_bar=False,
+                )
+                for current_window in windowed_blocks
+            )
+        else:
+            model_updates = []
+            for current_window in windowed_blocks:
+                model_updates.append(
+                    self.update_data_block(
+                        data_block=current_window,
+                        num_samples=num_samples,
+                        num_warmup=num_warmup,
+                        num_chains=num_chains,
+                        progress_bar=False,
+                    )
+                )
+        summary_statistics: Dict = {key: [] for key in model_updates[0].keys()}
+        for d in model_updates:
+            for key in summary_statistics.keys():
+                summary_statistics[key].append(d[key])
+
+        for key in summary_statistics.keys():
+            summary_statistics[key] = np.array(summary_statistics[key])
+        return summary_statistics
