@@ -1,4 +1,6 @@
-from typing import Dict, List, Optional
+from typing import Optional
+
+import numpy as np
 
 from ..dataloaders import standardize_list
 from .base_pyro import BasePyroLayer as Layer
@@ -12,7 +14,7 @@ class ARnPyroLayer(Layer):
 
     Attributes:
         name (str): The name of the layer.
-        raw_data (List[float]): The data associated with this layer.
+        raw_data (np.ndarray): The data associated with this layer.
         is_first_layer (bool): Flag indicating if this is the first layer.
         prev_layer (Optional[Layer]): Reference to the previous layer in the hierarchy.
         param_names (List[str]): Names of the parameters specific to this layer.
@@ -21,7 +23,7 @@ class ARnPyroLayer(Layer):
 
     Args:
         name (str): The name of the layer.
-        data (List[float]): The raw data associated with this layer.
+        data (np.ndarray): The raw data associated with this layer.
         is_first_layer (bool, optional): Flag to indicate if this is the first layer. Defaults to False.
         prev_layer (Optional[Layer], optional): Reference to the previous layer in the hierarchy. Defaults to None.
     """
@@ -29,7 +31,7 @@ class ARnPyroLayer(Layer):
     def __init__(
         self,
         name: str,
-        data: List[float],
+        data: np.ndarray,
         is_first_layer: bool = False,
         prev_layer: Optional[str] = None,
         params: dict = {},

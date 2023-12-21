@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 
 
-def standardize_list(input_list: List[float]) -> List:
+def standardize_list(input_list: np.ndarray) -> List:
     """
     Standardize the input list of floats to have a mean of 0 and a standard deviation of 1.
 

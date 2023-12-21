@@ -53,12 +53,12 @@ class PyroFunnel(BaseFunnel):
                 obs=self.data_dict[layer.name][t],
             )
 
-    def update_layer_data(self, layer_name: str, data: List[float]) -> None:
+    def update_layer_data(self, layer_name: str, data: np.ndarray) -> None:
         """Updates the data for a layer.
 
         Args:
             layer_name (str): The name of the layer to update.
-            data (List[float]): The new data for the layer.
+            data (np.ndarray): The new data for the layer.
         """
         self.layers[layer_name].raw_data = data
         standardized_data = standardize_list(data)

@@ -1,5 +1,7 @@
 from abc import ABC
-from typing import List, Optional
+from typing import Optional
+
+import numpy as np
 
 
 class BasePyroLayer(ABC):
@@ -10,7 +12,7 @@ class BasePyroLayer(ABC):
 
     Attributes:
         name (str): The name of the layer.
-        raw_data (List[float]): The raw data associated with this layer.
+        raw_data (np.ndarray): The raw data associated with this layer.
         is_first_layer (bool): Flag indicating if this is the first layer.
         prev_layer (Optional[Layer]): Reference to the previous layer in the hierarchy.
         params (dict): Dictionary of parameters for this layer.
@@ -19,13 +21,13 @@ class BasePyroLayer(ABC):
     def __init__(
         self,
         name: str,
-        data: List[float],
+        data: np.ndarray,
         is_first_layer: bool = False,
         prev_layer: Optional[str] = None,
         params: dict = {},
     ):
         self.name: str = name
-        self.raw_data: List[float] = data
+        self.raw_data: np.ndarray = data
         self.is_first_layer = is_first_layer
         self.prev_layer = prev_layer
         self.params = params
