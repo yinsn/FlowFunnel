@@ -13,7 +13,6 @@ class BasePyroLayer(ABC):
     Attributes:
         name (str): The name of the layer.
         raw_data (np.ndarray): The raw data associated with this layer.
-        is_first_layer (bool): Flag indicating if this is the first layer.
         prev_layer (Optional[Layer]): Reference to the previous layer in the hierarchy.
         params (dict): Dictionary of parameters for this layer.
     """
@@ -22,12 +21,14 @@ class BasePyroLayer(ABC):
         self,
         name: str,
         data: np.ndarray,
-        is_first_layer: bool = False,
         prev_layer: Optional[str] = None,
         params: dict = {},
     ):
         self.name: str = name
         self.raw_data: np.ndarray = data
-        self.is_first_layer = is_first_layer
         self.prev_layer = prev_layer
+        if prev_layer is not None:
+            self.is_first_layer = False
+        else:
+            self.is_first_layer = True
         self.params = params

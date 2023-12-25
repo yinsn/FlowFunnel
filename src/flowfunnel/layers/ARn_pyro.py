@@ -24,7 +24,6 @@ class ARnPyroLayer(Layer):
     Args:
         name (str): The name of the layer.
         data (np.ndarray): The raw data associated with this layer.
-        is_first_layer (bool, optional): Flag to indicate if this is the first layer. Defaults to False.
         prev_layer (Optional[Layer], optional): Reference to the previous layer in the hierarchy. Defaults to None.
     """
 
@@ -32,11 +31,10 @@ class ARnPyroLayer(Layer):
         self,
         name: str,
         data: np.ndarray,
-        is_first_layer: bool = False,
         prev_layer: Optional[str] = None,
         params: dict = {},
     ) -> None:
-        super().__init__(name, data, is_first_layer, prev_layer, params)
+        super().__init__(name, data, prev_layer, params)
         self.standardized_data = standardize_list(self.raw_data)
         self.param_names = (
             ["growth_trend"]
