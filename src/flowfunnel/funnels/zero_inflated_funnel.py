@@ -78,4 +78,3 @@ class ZeroInflatedFunnel(BaseFunnel):
         """
         self.layers[layer_name].raw_data = data
         self.data_dict.update({layer_name: data})
-        self.layers[layer_name].standardized_data = data
