@@ -68,3 +68,14 @@ class ZeroInflatedFunnel(BaseFunnel):
                         dist.Normal(transition_mean, 1),
                         obs=observations,
                     )
+
+    def update_layer_data(self, layer_name: str, data: np.ndarray) -> None:
+        """Updates the data for a layer.
+
+        Args:
+            layer_name (str): The name of the layer to update.
+            data (np.ndarray): The new data for the layer.
+        """
+        self.layers[layer_name].raw_data = data
+        self.data_dict.update({layer_name: data})
+        self.layers[layer_name].standardized_data = data

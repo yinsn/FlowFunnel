@@ -3,15 +3,15 @@ from typing import List
 import numpy as np
 
 
-def standardize_list(input_list: np.ndarray) -> List:
+def standardize_list(input_list: np.ndarray) -> np.ndarray:
     """
     Standardize the input list of floats to have a mean of 0 and a standard deviation of 1.
 
     Args:
-        input_list (List[float]): A list of float numbers.
+        input_list (np.ndarray): A list of float numbers.
 
     Returns:
-        List[float]: A list of standardized float numbers with mean 0 and standard deviation 1.
+        np.ndarray: A list of standardized float numbers with mean 0 and standard deviation 1.
                      If the original list has a standard deviation of 0, it returns a random list
                      of the same length with mean 0 and standard deviation 1.
 
@@ -25,4 +25,4 @@ def standardize_list(input_list: np.ndarray) -> List:
         mean = input_array.mean()
         standardized_array = (input_array - mean) / std
 
-    return list(standardized_array)
+    return standardized_array

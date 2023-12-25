@@ -16,7 +16,7 @@ class BaseFunnel:
 
     Attributes:
         layers (Dict[str, Layer]): Dictionary of layers in the funnel.
-        data_dict (Dict[str, List[float]]): Dictionary mapping layer names to their data.
+        data_dict (Dict[str, np.ndarray]): Dictionary mapping layer names to their data.
         model (Callable): The model function for MCMC.
         mcmc (Optional[MCMC]): The MCMC object for running simulations.
         run_prepared (bool): Flag to indicate if the MCMC run is prepared.
@@ -24,7 +24,7 @@ class BaseFunnel:
 
     def __init__(self) -> None:
         self.layers: Dict[str, Layer] = {}
-        self.data_dict: Dict[str, List[float]] = {}
+        self.data_dict: Dict[str, np.ndarray] = {}
         self.mcmc: Optional[MCMC] = None
         self.run_prepared = False
 
