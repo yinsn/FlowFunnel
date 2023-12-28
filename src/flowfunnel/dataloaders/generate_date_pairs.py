@@ -41,3 +41,25 @@ def generate_week_pairs(
         current += timedelta(days=interval)
 
     return pairs
+
+
+def generate_window_pairs(
+    array_length: int, window_size: int, step: int
+) -> List[tuple[int, int]]:
+    """
+    Generate a series of pairs of integers representing the start and end points of a window.
+
+    Args:
+        array_length (int): The length of the array.
+        window_size (int): The size of each window.
+        step (int): The step size to move the window.
+
+    Returns:
+        list[tuple[int, int]]: A list of tuples, each representing the start and end point of a window.
+    """
+    window_pairs = []
+    for start in range(0, array_length - window_size + 1, step):
+        end = start + window_size
+        window_pairs.append((start, end))
+
+    return window_pairs
