@@ -1,7 +1,7 @@
 from .base import BaseDataLoader
 from .calculate_transition_ratio import transition_ratio
 from .download_hdfs import HDFSDownloader
-from .generate_date_pairs import generate_week_pairs
+from .generate_date_pairs import generate_week_pairs, generate_window_pairs
 from .load_csv import CSVLoader
 from .load_dataframe import DataFrameLoader
 from .load_hdfs import HDFSDataloader
@@ -14,6 +14,7 @@ __all__ = [
     "CSVLoader",
     "DataFrameLoader",
     "generate_week_pairs",
+    "generate_window_pairs",
     "HDFSDataloader",
     "HDFSDataUploader",
     "HDFSDownloader",
