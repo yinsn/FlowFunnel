@@ -84,10 +84,6 @@ class ZeroInflatedFunnel(BaseFunnel):
     def update_data_block(
         self,
         data_block: List[np.ndarray],
-        num_samples: int = 300,
-        num_warmup: int = 100,
-        num_chains: int = 1,
-        progress_bar: bool = True,
     ) -> Dict[str, np.ndarray]:
         """
         Updates the model's data block and generates a new trace.
@@ -98,10 +94,6 @@ class ZeroInflatedFunnel(BaseFunnel):
 
         Args:
             data_block (List[np.ndarray]): A list of numpy arrays representing the data block.
-            num_samples (int, optional): Number of samples to draw. Defaults to 300.
-            num_warmup (int, optional): Number of warmup steps. Defaults to 100.
-            num_chains (int, optional): Number of chains to run. Defaults to 1.
-            progress_bar (bool, optional): Flag to indicate if a progress bar should be displayed. Defaults to False.
 
         Returns:
             Dict[str, np.ndarray]: A dictionary mapping keys to numpy arrays of model summary statistics.
@@ -109,5 +101,5 @@ class ZeroInflatedFunnel(BaseFunnel):
         constant_data_dict = self.get_constant_data_dict(data_block)
         for k, v in constant_data_dict.items():
             self.update_layer_data(k, v)
-        self.run(num_samples, num_warmup, num_chains, progress_bar)
+        self.run()
         return self.means
