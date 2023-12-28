@@ -6,6 +6,7 @@ from .load_csv import CSVLoader
 from .load_dataframe import DataFrameLoader
 from .load_hdfs import HDFSDataloader
 from .load_tsv import TSVLoader
+from .split_dataframe_by_window import windowed_partition
 from .standardize import standardize_list
 from .upload_hdfs import HDFSDataUploader
 
@@ -21,4 +22,5 @@ __all__ = [
     "standardize_list",
     "transition_ratio",
     "TSVLoader",
+    "windowed_partition",
 ]
